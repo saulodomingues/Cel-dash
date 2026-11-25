@@ -131,16 +131,18 @@ function connect() {
 }
 
 // ---------- toque ----------
-// toque curto: próxima tela (ou acorda). Segurar 1,5 s: abre as configurações no próprio celular.
+// toque curto: próxima tela (ou acorda). Toque no IP ou segurar 1,5 s: abre as configurações no próprio celular.
 if (!PREVIEW) {
   let hold = null, held = false;
   addEventListener('pointerdown', () => {
     held = false;
     hold = setTimeout(() => { held = true; location.href = '/admin'; }, 1500);
   });
-  addEventListener('pointerup', () => {
+  addEventListener('pointerup', (e) => {
     clearTimeout(hold);
     if (held || !st.config) return;
+    // toque no status/IP (canto superior direito da tela principal): abre as configurações
+    if (st.mode === 'on' && e.target.closest?.('[data-admin]')) { location.href = '/admin'; return; }
     if (st.mode !== 'on') { burnin.wakeBriefly(); return; }
     burnin.activity();
     if (st.config.rotation.tapNext) next();

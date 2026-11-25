@@ -19,7 +19,7 @@ export function clockCard(now, city, sys, digits = '#C4C7CC', extra = '') {
   return `
 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #9AA0A6; letter-spacing: 0.04em">
 <span>${esc(city)}</span>
-<span style="display: flex; align-items: center; gap: 6px"><span style="width: 6px; height: 6px; border-radius: 50%; background: ${dot}"></span>${esc(status)}</span>
+<span data-admin title="Configurações" style="display: flex; align-items: center; gap: 6px; padding: 8px 0 8px 16px; margin: -8px 0"><span style="width: 6px; height: 6px; border-radius: 50%; background: ${dot}"></span>${esc(status)}</span>
 </div>
 ${extra ? `<div style="flex: 1; min-height: 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 6px">
 <div style="min-width: 0; display: flex; flex-direction: column; justify-content: space-between; align-self: stretch; padding-top: 10px">${clock}</div>
