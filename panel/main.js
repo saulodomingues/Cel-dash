@@ -3,10 +3,13 @@ import { tela1 } from './screens/tela1.js';
 import { tela2 } from './screens/tela2.js';
 import { tela3 } from './screens/tela3.js';
 import { idle } from './screens/idle.js';
+import { gif } from './screens/gif.js';
 import { tick } from '/widgets/clock/view.js';
 import * as burnin from './burnin.js';
 
-const SCREENS = { tela1, tela2, tela3 };
+const SCREENS = { tela1, tela2, tela3, gif };
+// telas que só entram na rotação se tiverem conteúdo
+const HAS_CONTENT = { gif: (c) => (c.gif?.items || []).length > 0 };
 const W = 780, H = 360;
 const qs = new URLSearchParams(location.search);
 const PINNED = qs.get('screen');       // ?screen=tela2 fixa uma tela
@@ -14,11 +17,11 @@ const PREVIEW = qs.has('preview');     // usado pelo /admin: sem toque, sem burn
 
 const stage = document.getElementById('stage');
 const blackout = document.getElementById('blackout');
-const st = { config: null, data: {}, current: null, mode: 'on', lastMinute: -1, lastRotate: Date.now(), fading: false };
+const st = { gifIndex: 0, lastHtml: '', config: null, data: {}, current: null, mode: 'on', lastMinute: -1, lastRotate: Date.now(), fading: false };
 
 const enabled = () => {
   if (PINNED && SCREENS[PINNED]) return [PINNED];
-  const ids = st.config.screens.filter((s) => s.enabled && SCREENS[s.id]).map((s) => s.id);
+  const ids = st.config.screens.filter((s) => s.enabled && SCREENS[s.id] && (!HAS_CONTENT[s.id] || HAS_CONTENT[s.id](st.config))).map((s) => s.id);
   return ids.length ? ids : ['tela1'];
 };
 
@@ -27,7 +30,9 @@ function render() {
   const now = Date.now();
   const fn = st.mode === 'idle' ? idle : SCREENS[st.current] || tela1;
   try {
-    stage.innerHTML = fn({ data: st.data, config: st.config, now });
+    const html = fn({ data: st.data, config: st.config, now, gifIndex: st.gifIndex });
+    // não recria o que não mudou: senão o GIF recomeçaria a cada atualização de dado
+    if (html !== st.lastHtml) { stage.innerHTML = html; st.lastHtml = html; }
   } catch (e) {
     // um widget com dado inesperado não pode deixar a tela em branco
     console.error(e);
@@ -48,6 +53,7 @@ function show(id) {
   st.lastRotate = Date.now();
   stage.style.opacity = '0';
   setTimeout(() => {
+    if (id === 'gif' && st.current !== 'gif') st.gifIndex++;
     st.current = id;
     render();
     stage.style.opacity = '1';

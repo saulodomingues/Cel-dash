@@ -148,7 +148,7 @@ test('config: valores fora da faixa são corrigidos e o painel não vê caminhos
   const c = setConfig({ claude: { intervalMin: 1, credentialsFile: '/x' }, pixelShift: { maxPx: 99 }, screens: [{ id: 'tela3', enabled: false }, { id: 'zzz' }], night: { start: 'abc' } });
   assert.equal(c.claude.intervalMin, 5);
   assert.equal(c.pixelShift.maxPx, 8);
-  assert.deepEqual(c.screens.map((s) => s.id), ['tela3', 'tela1', 'tela2']);
+  assert.deepEqual(c.screens.map((s) => s.id), ['tela3', 'tela1', 'tela2', 'gif']);
   assert.equal(c.night.start, '22:00');
   assert.equal(publicConfig().claude.credentialsFile, undefined);
 });

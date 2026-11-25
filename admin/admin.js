@@ -1,7 +1,7 @@
 // /admin: telas e configurações. Funciona no navegador do PC e no próprio celular.
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol e Claude em linha'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'] };
+const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol e Claude em linha'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'], gif: ['GIF', 'Só a imagem animada, em tela cheia. Envie abaixo.'] };
 const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S20' };
 let S = null; // { config, secrets, status, server, demo }
 let dirty = false;
@@ -174,6 +174,19 @@ function render() {
 ${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20" max="3600"')}
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 </div>
+<h2 style="margin-top:16px">GIF</h2>
+<p class="muted">A tela "GIF" mostra só a imagem, sobre preto. Com várias, cada passagem mostra a próxima. GIF, PNG, JPG ou WEBP até 20 MB.</p>
+<div class="row" style="margin-top:8px">
+<label>Enviar imagem<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label>
+<label>Ajuste<select data-path="gif.fit">
+<option value="contain" ${S.config.gif.fit === 'contain' ? 'selected' : ''}>Caber inteira (faixas pretas)</option>
+<option value="cover" ${S.config.gif.fit === 'cover' ? 'selected' : ''}>Preencher a tela (corta as bordas)</option>
+</select></label>
+</div>
+<div class="screens" style="margin-top:8px">${S.config.gif.items.map((it) => `
+<div class="screen"><div class="thumb" style="display:flex;align-items:center;justify-content:center"><img src="/media/${esc(it.file)}" alt="" style="max-width:100%;max-height:100%"></div>
+<div class="info"><b>${esc(it.name)}</b></div>
+<div class="moves"><button data-delmedia="${esc(it.file)}">Apagar</button></div></div>`).join('') || '<p class="muted">Nenhuma imagem enviada.</p>'}</div>
 <h2 style="margin-top:16px">Contadores do Claude</h2>
 <p class="muted">Quais aparecem e em que ordem, na tela principal (anéis) e na tela 2 (linha). Cada anel que sai dá o espaço para a estatística.</p>
 <div class="screens">${counterList()}</div>
@@ -262,6 +275,21 @@ function wire() {
     if (!S.config.screens.some((s) => s.enabled)) { S.config.screens[Number(el.dataset.screen)].enabled = true; toast('Pelo menos uma tela precisa ficar ativa.'); }
     dirty = true; render();
   }));
+  document.getElementById('gifFile').addEventListener('change', guard(async (e) => {
+    const files = [...e.target.files];
+    for (const f of files) {
+      toast(`Enviando ${f.name}…`);
+      const r = await fetch('/api/admin/media', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(f.name) }, body: f });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `Erro ${r.status}`);
+      S.config.gif = j.config.gif; S.config.screens = j.config.screens;
+    }
+    render(); toast(files.length > 1 ? `${files.length} imagens enviadas.` : 'Imagem enviada.');
+  }));
+  app.querySelectorAll('[data-delmedia]').forEach((el) => el.addEventListener('click', guard(async () => {
+    const r = await call('DELETE', `/api/admin/media/${el.dataset.delmedia}`);
+    S.config.gif = r.config.gif; render(); toast('Imagem apagada.');
+  })));
   app.querySelectorAll('[data-counter]').forEach((el) => el.addEventListener('change', () => {
     S.config.claudeView.counters[Number(el.dataset.counter)].enabled = el.checked;
     dirty = true; render();

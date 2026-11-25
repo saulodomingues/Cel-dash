@@ -89,6 +89,10 @@ Todos os números dos mocks são de exemplo.
 - Fontes: Space Grotesk para números, Inter para o resto. Os mocks carregam do Google Fonts; no aparelho, sirva as fontes localmente para funcionar sem internet.
 - Margem externa de 12 px na tela 1: é a folga do pixel shift.
 
+## Tela GIF
+
+Quarta tela (`gif`): só uma imagem animada em tela cheia sobre preto. Envio em `/admin` → Telas (GIF, PNG, JPG ou WEBP até 20 MB, conferido pelo conteúdo), guardado em `data/media`, servido em `/media/<hex>.<ext>`. Várias imagens: cada passagem pela tela mostra a próxima. Ajuste caber/preencher. Só entra na rotação se houver imagem. O painel não recria o HTML quando nada mudou, para o GIF não reiniciar a cada dado novo.
+
 ## Contadores do Claude
 
 `config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, nas telas 1 (anéis) e 2 (linha); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 o card tem 4 espaços: cada anel ocupa 1 e a estatística fica com 0,8 + o espaço dos anéis que saíram; sempre 7 dias, barras mais largas. O card nunca fica vazio.

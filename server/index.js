@@ -3,10 +3,11 @@
 //   /admin   configurações e telas (celular ou navegador do PC)
 //   /events  SSE: empurra dados e configuração para o painel na hora
 import http from 'node:http';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { ROOT, getConfig, setConfig, publicConfig, getSecrets, saveSecrets } from './config.js';
+import { ROOT, DATA_DIR, getConfig, setConfig, publicConfig, getSecrets, saveSecrets } from './config.js';
 import * as auth from './auth.js';
 import * as scheduler from './scheduler.js';
 import * as updater from './updater.js';
@@ -17,7 +18,7 @@ const DEMO = process.env.DEMO === '1';
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
-  '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8',
+  '.woff2': 'font/woff2', '.png': 'image/png', '.gif': 'image/gif', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8',
 };
 
 // ---------- SSE ----------
@@ -75,6 +76,32 @@ function staticPath(urlPath) {
   if (/^\/(panel|admin)\/[\w./-]+$/.test(p)) return p.slice(1);
   if (/^\/widgets\/[\w-]+\/(view|[\w-]+\.shared)\.js$/.test(p)) return p.slice(1);
   return null;
+}
+
+// ---------- imagens e GIFs da tela de mídia (data/media) ----------
+const MEDIA_DIR = path.join(DATA_DIR, 'media');
+fs.mkdirSync(MEDIA_DIR, { recursive: true });
+const MEDIA_MAX = 20 * 1024 * 1024;
+
+// Tipo pelo conteúdo, não pelo nome: só imagens.
+function imageType(buf) {
+  if (buf.subarray(0, 6).toString('latin1').match(/^GIF8[79]a$/)) return 'gif';
+  if (buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'png';
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpg';
+  if (buf.subarray(0, 4).toString('latin1') === 'RIFF' && buf.subarray(8, 12).toString('latin1') === 'WEBP') return 'webp';
+  return null;
+}
+
+function readRaw(req, max) {
+  return new Promise((resolve, reject) => {
+    let size = 0; const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > max) { reject(new Error(`Arquivo grande demais (máximo ${max / 1024 / 1024} MB).`)); req.destroy(); } else chunks.push(c);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
 }
 
 // ---------- status dos segredos (nunca os valores) ----------
@@ -193,6 +220,27 @@ async function api(req, res, url) {
       name: c.name, region: [c.admin1, c.country].filter(Boolean).join(', '), lat: c.latitude, lon: c.longitude,
     })) });
   }
+  if (p === '/api/admin/media' && m === 'POST') {
+    const buf = await readRaw(req, MEDIA_MAX);
+    const type = imageType(buf);
+    if (!type) return send(res, 400, { error: 'Envie um GIF, PNG, JPG ou WEBP.' });
+    const file = `${crypto.randomBytes(8).toString('hex')}.${type}`;
+    fs.writeFileSync(path.join(MEDIA_DIR, file), buf);
+    const name = decodeURIComponent(String(req.headers['x-file-name'] || file)).slice(0, 80);
+    const c = getConfig();
+    const after = setConfig({ ...c, gif: { ...c.gif, items: [...c.gif.items, { file, name }] } });
+    broadcast('config', publicConfig());
+    return send(res, 200, { config: after });
+  }
+  if (p.startsWith('/api/admin/media/') && m === 'DELETE') {
+    const file = p.split('/').pop();
+    const c = getConfig();
+    if (!c.gif.items.some((i) => i.file === file)) return send(res, 404, { error: 'Imagem não encontrada.' });
+    fs.rmSync(path.join(MEDIA_DIR, file), { force: true });
+    const after = setConfig({ ...c, gif: { ...c.gif, items: c.gif.items.filter((i) => i.file !== file) } });
+    broadcast('config', publicConfig());
+    return send(res, 200, { config: after });
+  }
   if (p === '/api/admin/secrets/git' && m === 'PUT') {
     const token = String((await readBody(req)).token || '').trim();
     if (token && !/^[A-Za-z0-9_]{20,255}$/.test(token)) return send(res, 400, { error: 'Isso não parece um token do GitHub (ghp_… ou github_pat_…).' });
@@ -229,6 +277,14 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Método não permitido');
+    const media = /^\/media\/([a-f0-9]{16}\.(gif|png|jpg|webp))$/.exec(url.pathname);
+    if (media) {
+      return fs.readFile(path.join(MEDIA_DIR, media[1]), (err, buf) => {
+        if (err) return send(res, 404, 'Não encontrado');
+        res.writeHead(200, { 'Content-Type': MIME[`.${media[2]}`], 'Cache-Control': 'public, max-age=31536000, immutable' });
+        res.end(buf);
+      });
+    }
     const rel = staticPath(url.pathname);
     if (!rel) return send(res, 404, 'Não encontrado');
     serveFile(res, path.join(ROOT, rel));

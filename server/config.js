@@ -18,7 +18,9 @@ export const DEFAULTS = {
     { id: 'tela1', enabled: true },
     { id: 'tela2', enabled: true },
     { id: 'tela3', enabled: true },
+    { id: 'gif', enabled: true }, // só entra na rotação se houver imagem enviada
   ],
+  gif: { items: [], fit: 'contain' }, // items: [{ file, name }] em data/media
   tela1: { clockExtra: 'calendar' }, // 'calendar' | 'none'
   // contadores do Claude nas telas 1 e 2: quais e em que ordem; estatística de 7 dias na tela 1
   claudeView: {
@@ -85,6 +87,8 @@ function sanitize(c) {
   for (const id of ids) if (!got.some((g) => g.id === id)) got.push({ id, enabled: true });
   if (!got.some((g) => g.enabled) && !c.claudeView.showStats) c.claudeView.showStats = true; // card nunca vazio
   c.claudeView.counters = got;
+  c.gif.fit = c.gif.fit === 'cover' ? 'cover' : 'contain';
+  c.gif.items = c.gif.items.filter((i) => i && /^[a-f0-9]{16}\.(gif|png|jpg|webp)$/.test(i.file)).map((i) => ({ file: i.file, name: String(i.name || i.file).slice(0, 80) }));
   c.tela1.clockExtra = ['calendar', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
   c.port = clamp(Math.round(c.port), 1024, 65535);
   c.city.lat = clamp(c.city.lat, -90, 90);
