@@ -75,7 +75,7 @@ Arquivos: `mocks/telaN.html` (HTML estático, abre direto no navegador) e `mocks
 
 **Tela 2: tempo em detalhe** (layout D, aprovado em 25/11/2026; substitui o mock original)
 - Duas linhas alinhadas, sem molduras. Coluna esquerda de 214 px: em cima "Agora" (ícone, temperatura grande, condição e sensação, máx/mín e horário do sol); embaixo "Hoje" (chuva com pico e mm, umidade, UV com cor de risco, vento com direção) e o relógio no canto inferior esquerdo.
-- Coluna direita: em cima a curva das próximas 24 h com a chuva em barras; embaixo "Próximos 7 dias" em colunas (ícone, máx, barra mín→máx do âmbar ao azul, chance de chuva).
+- Coluna direita: em cima a curva das próximas 24 h com a chuva em barras (104 px de altura: a linha das horas fica na mesma altura da linha máx/mín/sol à esquerda; primeira linha da grade com 124 px); embaixo "Próximos 7 dias" em colunas (ícone, máx, barra mín→máx do âmbar ao azul, chance de chuva).
 - Atenção ao burn-in: a tela 3 também tem o relógio no canto inferior esquerdo.
 
 **Tela 3: saúde do sistema**

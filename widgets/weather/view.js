@@ -71,7 +71,7 @@ export function chart24(w, opts = {}) {
   const max = Math.max(...temps), min = Math.min(...temps);
   // proporções da tela original (180 de altura): rótulos de cima, curva, barras e horas embaixo
   const k = H / 180;
-  const X0 = 14 + (W > 600 ? 10 : 0), X1 = W - X0, YT = 28 * k, YB = 108 * k, BASE = 118 * k, BAR = 26 * k, BARS_Y = 148 * k, LAB_Y = H - 12 * k;
+  const X0 = 14 + (W > 600 ? 10 : 0), X1 = W - X0, YT = Math.max(28 * k, 22), YB = 108 * k, BASE = 118 * k, BAR = 26 * k, BARS_Y = 148 * k, LAB_Y = H - 12 * k;
   const x = (i) => X0 + ((X1 - X0) * i) / (hs.length - 1);
   const y = (t) => (max === min ? (YT + YB) / 2 : YB - ((t - min) / (max - min)) * (YB - YT));
   const pts = hs.map((h, i) => [x(i), y(h.temp)]);
