@@ -18,15 +18,12 @@ Abra `http://localhost:8080/` (painel) e `http://localhost:8080/admin`. Para fix
 ## Instalar no S20
 
 1. Instale pelo **F-Droid** (as versões da Play Store estão abandonadas): **Termux**, **Termux:API** e **Termux:Boot**. Abra o Termux:Boot uma vez.
-2. No Termux:
+2. No Termux, cole um comando só (abra este README no navegador do celular e copie):
    ```sh
-   pkg install -y git
-   git clone https://github.com/saulodomingues/Cel-dash.git
-   cd Cel-dash
-   sh scripts/install-termux.sh
+   curl -L https://raw.githubusercontent.com/saulodomingues/Cel-dash/HEAD/scripts/bootstrap.sh | sh
    ```
-   O script instala Node e Termux:API e cria `~/.termux/boot/monitor-mesa.sh`, que sobe o servidor sozinho a cada reinício do aparelho.
-3. Inicie agora: `sh ~/.termux/boot/monitor-mesa.sh &`
+   Ele baixa o projeto em `~/Cel-dash`, instala Node e Termux:API, configura a subida automática a cada reinício e inicia o servidor. Rodar de novo atualiza. Exige o repositório público.
+3. Para iniciar à mão depois: `sh ~/.termux/boot/monitor-mesa.sh &`
 4. Valide as fontes de dados: `npm run probe`. Ele testa Termux:API, rede, Open-Meteo e o uso do Claude, um por um.
 5. No Android: tire o Termux da otimização de bateria, ligue a proteção de bateria (limite de carga) e reserve um IP fixo para o S20 no roteador.
 
