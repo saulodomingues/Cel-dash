@@ -116,9 +116,16 @@ function loop() {
 }
 
 // ---------- dados ----------
+// Recarrega a página (versão nova do painel ou pedido do /admin) guardando antes o que precisa
+// continuar de onde parou, como o letreiro.
+function reloadPage() {
+  for (const fn of BEFORE) { try { fn(stage); } catch { /* segue */ } }
+  location.reload();
+}
+
 function applyState(s) {
     // o servidor voltou com outra versão (atualização automática): recarrega para pegar o código novo
-    if (st.version && s.version !== st.version) return location.reload();
+    if (st.version && s.version !== st.version) return reloadPage();
     st.version = s.version;
     st.config = s.config; st.data = s.data;
     if (!st.current) st.current = enabled()[0];
@@ -146,7 +153,7 @@ function connect() {
     if (!st.fading) render();
   });
   es.addEventListener('config', (e) => { st.config = JSON.parse(e.data); if (!st.fading) render(); layout(); });
-  es.addEventListener('reload', () => location.reload());
+  es.addEventListener('reload', reloadPage);
   // o EventSource reconecta sozinho; ao voltar, o servidor reenvia o estado inteiro
 }
 

@@ -21,7 +21,14 @@ export function tickerBar(items, crawl) {
 
 // Onde o letreiro parou: guardado ao sair da tela (ou antes de redesenhar com manchetes novas),
 // para continuar dali. Vale mesmo que a lista tenha mudado: nunca volta ao começo vazio.
+// Também fica no armazenamento do navegador: a página recarrega quando chega versão nova do
+// painel (atualização automática), e o letreiro não deve voltar ao começo por isso.
+const STORE = 'painel.ticker';
 const saved = { frac: 0 }; // fração do percurso (0 a 1)
+try { saved.frac = Number(JSON.parse(localStorage.getItem(STORE) || '{}').frac) || 0; } catch { /* sem armazenamento */ }
+const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ frac: saved.frac })); } catch { /* sem armazenamento */ } };
+// antes de a página sair (recarregar), guarda onde o letreiro está
+addEventListener('pagehide', () => { const bar = document.querySelector('[data-keep^="ticker-"]'); if (bar) saveTicker(bar.parentElement); });
 
 // Chamado pelo painel antes de trocar o conteúdo da tela.
 export function saveTicker(root) {
@@ -29,7 +36,7 @@ export function saveTicker(root) {
   const anim = bar?.querySelector('[data-ticker-track]')?.getAnimations?.()[0];
   // progresso da volta atual: já inclui o atraso negativo da retomada anterior
   const p = anim?.effect?.getComputedTiming?.().progress;
-  if (typeof p === 'number') saved.frac = p;
+  if (typeof p === 'number') { saved.frac = p; persist(); }
 }
 
 // Ajusta a duração para a velocidade ficar constante, seja qual for o tamanho do texto,

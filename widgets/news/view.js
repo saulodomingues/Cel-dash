@@ -40,7 +40,10 @@ let timer = null;
 // Última manchete mostrada, para continuar de onde parou quando a tela volta na rotação ou
 // quando chegam manchetes novas. Procura essa manchete na lista atual; se ela saiu da lista,
 // segue pela mesma posição. Nunca volta para a primeira sem motivo.
+const RSTORE = 'painel.news';
 const resume = { title: '', i: -1 };
+// sobrevive ao recarregamento da página (atualização automática do painel)
+try { Object.assign(resume, JSON.parse(localStorage.getItem(RSTORE) || '{}')); } catch { /* sem armazenamento */ }
 export function mountNews(root) {
   clearInterval(timer);
   const el = root.querySelector('#news');
@@ -59,6 +62,7 @@ export function mountNews(root) {
     if (!el.isConnected) { clearInterval(timer); return; }
     i = (i + 1) % items.length;
     Object.assign(resume, { title: items[i].title, i });
+    try { localStorage.setItem(RSTORE, JSON.stringify(resume)); } catch { /* sem armazenamento */ }
     const it = items[i], now = Date.now();
     const s = document.createElement('div');
     s.className = 'story in';
