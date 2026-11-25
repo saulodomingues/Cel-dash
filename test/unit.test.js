@@ -11,7 +11,19 @@ const weather = await import('../widgets/weather/collector.js');
 const { setConfig, publicConfig } = await import('../server/config.js');
 const { shiftOffset, inRange } = await import('../panel/burnin.js');
 
+const claudeAuth = await import('../widgets/claude/auth.js');
 const H = 3600_000;
+
+test('claude: login gera o endereço de autorização com PKCE e recusa código de outra tentativa', async () => {
+  // vetor do RFC 7636, apêndice B
+  assert.equal(claudeAuth.challengeFor('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+  const u = new URL(claudeAuth.startLogin());
+  assert.equal(u.origin + u.pathname, 'https://claude.ai/oauth/authorize');
+  assert.equal(u.searchParams.get('scope'), 'user:profile');
+  assert.equal(u.searchParams.get('code_challenge_method'), 'S256');
+  assert.ok(u.searchParams.get('state').length >= 32);
+  await assert.rejects(claudeAuth.finishLogin('abc#estado-errado', { secrets: {}, saveSecrets() {} }), /outra tentativa/);
+});
 
 test('claude: normaliza a resposta e escolhe o limite por modelo', () => {
   const raw = {

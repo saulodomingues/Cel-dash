@@ -29,7 +29,7 @@ export const DEFAULTS = {
   weather: { intervalMin: 15 },
   claude: {
     intervalMin: 10,
-    source: 'file', // 'file' = arquivo de credenciais do Claude Code; 'manual' = colado no /admin
+    source: 'manual', // 'manual' = login feito no /admin (ou credenciais coladas); 'file' = arquivo do Claude Code
     credentialsFile: '~/.claude/.credentials.json',
     modelKey: 'auto',
     planLabel: 'assinatura Max',
@@ -90,7 +90,7 @@ function sanitize(c) {
   c.update.intervalMin = clamp(Math.round(c.update.intervalMin), 1, 1440);
   c.weather.intervalMin = clamp(c.weather.intervalMin, 5, 180);
   c.claude.intervalMin = clamp(c.claude.intervalMin, 5, 180); // coleta espaçada: endpoint não documentado
-  c.claude.source = c.claude.source === 'manual' ? 'manual' : 'file';
+  c.claude.source = c.claude.source === 'file' ? 'file' : 'manual';
   c.system.intervalSec = clamp(Math.round(c.system.intervalSec), 30, 600);
   c.system.chargeLimit = clamp(Math.round(c.system.chargeLimit), 0, 100);
   c.system.pingPort = clamp(Math.round(c.system.pingPort), 1, 65535);

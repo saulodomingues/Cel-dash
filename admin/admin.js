@@ -94,30 +94,43 @@ function screensList() {
 
 function claudeInfo() {
   const d = S.status.claude?.data;
+  const st = S.status.claude || {};
   const keys = d?.keys || [];
   const cur = S.config.claude.modelKey;
   const opts = ['auto', ...new Set([...keys, ...(cur !== 'auto' ? [cur] : [])])];
   const sec = S.secrets;
+  const connected = S.config.claude.source === 'manual' ? sec.claudeManual : Boolean(st.at);
+  const state = connected && !st.error
+    ? `<span class="dot" style="background:var(--green)"></span> Conta conectada${st.at ? ` · última leitura ${ago(st.at)}` : ''}`
+    : connected ? `<span class="dot" style="background:var(--amber)"></span> Conectada, mas a leitura falhou: <span class="err">${esc(st.error)}</span>`
+    : '<span class="dot" style="background:var(--muted)"></span> Conta não conectada';
   return `
-<div class="grid">
-<label>Origem das credenciais<select data-path="claude.source">
-<option value="file" ${S.config.claude.source === 'file' ? 'selected' : ''}>Arquivo do Claude Code neste aparelho</option>
-<option value="manual" ${S.config.claude.source === 'manual' ? 'selected' : ''}>Credenciais coladas aqui</option>
-</select></label>
-${field('claude.credentialsFile', 'Arquivo de credenciais', 'text')}
+<p style="margin-bottom:12px">${state}</p>
+<div class="row"><button class="primary" id="claudeLogin">${connected ? 'Entrar de novo' : 'Entrar com a conta Claude'}</button>
+<button id="clearCreds" ${sec.claudeManual ? '' : 'disabled'}>Desconectar</button></div>
+<div id="loginStep" hidden style="margin-top:12px">
+<p class="muted" style="margin-bottom:8px">1. Na aba que abriu, entre na sua conta Claude e clique em autorizar. <a id="loginLink" href="#" target="_blank" rel="noopener">Abrir de novo</a><br>2. A página mostra um código. Copie e cole aqui:</p>
+<form id="loginFinish" class="row"><label>Código<input type="text" id="loginCode" autocomplete="off" spellcheck="false" required></label><button class="primary">Concluir</button></form>
+</div>
+<div class="grid" style="margin-top:16px">
+<label>Anel do meio (limite semanal por modelo)<select data-path="claude.modelKey">${opts.map((k) => `<option value="${esc(k)}" ${k === cur ? 'selected' : ''}>${k === 'auto' ? 'Automático (Fable, se existir)' : esc(k)}</option>`).join('')}</select></label>
 ${field('claude.intervalMin', 'Coletar a cada (min)', 'number', 'min="5" max="180"')}
-<label>Limite semanal por modelo<select data-path="claude.modelKey">${opts.map((k) => `<option value="${esc(k)}" ${k === cur ? 'selected' : ''}>${k === 'auto' ? 'Automático (Fable, se existir)' : esc(k)}</option>`).join('')}</select></label>
 ${field('claude.planLabel', 'Rótulo do plano', 'text')}
 </div>
-<p class="muted" style="margin-top:12px">${d ? `Limites por modelo que a sua conta expõe: ${keys.length ? keys.map((k) => `<code>${esc(k)}</code>`).join(' ') : 'nenhum'}. Em uso: ${d.model ? `<code>${esc(d.model.key)}</code>` : 'nenhum (o anel do meio fica sem dados)'}.` : 'Ainda não houve uma leitura boa; os limites por modelo aparecem aqui depois dela.'}</p>
+<p class="muted" style="margin-top:12px">${d ? `Limites por modelo que a sua conta expõe: ${keys.length ? keys.map((k) => `<code>${esc(k)}</code>`).join(' ') : 'nenhum'}. Em uso: ${d.model ? `<code>${esc(d.model.key)}</code>` : 'nenhum (o anel do meio fica sem dados)'}.` : 'Os limites por modelo aparecem aqui depois da primeira leitura.'}</p>
+<details style="margin-top:12px"><summary class="muted" style="cursor:pointer">Opções avançadas</summary>
+<div class="grid" style="margin-top:12px">
+<label>Origem das credenciais<select data-path="claude.source">
+<option value="manual" ${S.config.claude.source === 'manual' ? 'selected' : ''}>Login feito aqui (ou credenciais coladas)</option>
+<option value="file" ${S.config.claude.source === 'file' ? 'selected' : ''}>Arquivo do Claude Code neste aparelho</option>
+</select></label>
+${field('claude.credentialsFile', 'Arquivo de credenciais', 'text')}
+</div>
 <div class="row" style="margin-top:12px">
 <label><span>Colar credenciais (conteúdo de <code>.credentials.json</code> ou só o access token)</span><textarea id="creds" placeholder='{"claudeAiOauth":{"accessToken":"…","refreshToken":"…","expiresAt":…}}' autocomplete="off" spellcheck="false"></textarea></label>
 </div>
-<div class="row" style="margin-top:8px">
-<button id="saveCreds">Salvar credenciais coladas</button>
-<button id="clearCreds" ${sec.claudeManual ? '' : 'disabled'}>Apagar</button>
-<span class="muted">${sec.claudeManual ? `Salvas no aparelho${sec.claudeManualHasRefresh ? ', com renovação automática' : ', sem refresh token: valem só até expirar'}. Nunca são reexibidas.` : 'Nenhuma credencial colada.'}</span>
-</div>`;
+<div class="row" style="margin-top:8px"><button id="saveCreds">Salvar credenciais coladas</button></div>
+</details>`;
 }
 
 function updateInfo() {
@@ -153,7 +166,7 @@ ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 <div class="results" id="georesults"></div>
 <div class="grid" style="margin-top:12px">${field('weather.intervalMin', 'Coletar a cada (min)', 'number', 'min="5" max="180"')}</div></section>
 
-<section class="card"><h2>Claude</h2><p class="muted">Uso da assinatura via OAuth. O token fica só neste aparelho e é renovado sozinho.</p>${claudeInfo()}</section>
+<section class="card"><h2>Claude</h2><p class="muted">Uso da sua assinatura (não é chave de API). O acesso fica guardado só no celular, serve apenas para ler o uso e é renovado sozinho.</p>${claudeInfo()}</section>
 
 <section class="card"><h2>Brilho e descanso da tela</h2><p class="muted">Brilho, apagar e detecção de movimento são feitos pelo Fully Kiosk Browser; em outro navegador só o pixel shift e a rotação valem.</p>
 <div class="grid">
@@ -251,11 +264,27 @@ function wire() {
       toast(`Cidade: ${c.name}. Falta salvar.`);
     }));
   }));
+  document.getElementById('claudeLogin').addEventListener('click', guard(async () => {
+    const tab = window.open('', '_blank'); // aberta já no clique, senão o navegador bloqueia
+    const { url } = await call('POST', '/api/admin/claude/login').catch((e) => { tab?.close(); throw e; });
+    if (tab) tab.location = url;
+    document.getElementById('loginLink').href = url;
+    document.getElementById('loginStep').hidden = false;
+    document.getElementById('loginCode').focus();
+  }));
+  document.getElementById('loginFinish').addEventListener('submit', guard(async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Conectando…';
+    const r = await call('POST', '/api/admin/claude/login/finish', { code: document.getElementById('loginCode').value }).finally(() => { btn.disabled = false; btn.textContent = 'Concluir'; });
+    S.secrets = r.secrets; S.config.claude.source = r.config.claude.source; S.status.claude = r.status;
+    render();
+    toast(r.status.error ? `Conectou, mas a leitura falhou: ${r.status.error}` : 'Conta conectada. O painel já está mostrando o uso.');
+  }));
   const saveCreds = (value) => guard(async () => {
     const r = await call('PUT', '/api/admin/secrets/claude', { credentials: value() });
     S.secrets = r.secrets;
     if (value()) { S.config.claude.source = 'manual'; const c = await call('PUT', '/api/admin/config', S.config); S.config = c.config; dirty = false; }
-    toast(value() ? 'Credenciais salvas. Testando a leitura…' : 'Credenciais apagadas.');
+    toast(value() ? 'Credenciais salvas. Testando a leitura…' : 'Conta desconectada.');
     if (value()) S.status.claude = await call('POST', '/api/admin/collect/claude');
     render();
     if (S.status.claude?.error) toast(`Falhou: ${S.status.claude.error}`);

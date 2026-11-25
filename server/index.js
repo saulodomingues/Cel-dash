@@ -10,6 +10,7 @@ import { ROOT, getConfig, setConfig, publicConfig, getSecrets, saveSecrets } fro
 import * as auth from './auth.js';
 import * as scheduler from './scheduler.js';
 import * as updater from './updater.js';
+import * as claudeAuth from '../widgets/claude/auth.js';
 
 const DEMO = process.env.DEMO === '1';
 const MIME = {
@@ -158,6 +159,15 @@ async function api(req, res, url) {
     if (JSON.stringify(before.claude) !== JSON.stringify(after.claude)) scheduler.refresh('claude');
     if (JSON.stringify(before.system) !== JSON.stringify(after.system)) scheduler.refresh('system');
     return send(res, 200, { config: after, portChanged: before.port !== after.port });
+  }
+  if (p === '/api/admin/claude/login' && m === 'POST') {
+    return send(res, 200, { url: claudeAuth.startLogin() });
+  }
+  if (p === '/api/admin/claude/login/finish' && m === 'POST') {
+    const { code } = await readBody(req);
+    await claudeAuth.finishLogin(code, { secrets: getSecrets(), saveSecrets });
+    if (getConfig().claude.source !== 'manual') setConfig({ ...getConfig(), claude: { ...getConfig().claude, source: 'manual' } });
+    return send(res, 200, { secrets: secretsStatus(), config: getConfig(), status: await scheduler.refresh('claude') });
   }
   if (p === '/api/admin/secrets/claude' && m === 'PUT') {
     const { credentials } = await readBody(req);

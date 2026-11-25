@@ -28,14 +28,13 @@ Abra `http://localhost:8080/` (painel) e `http://localhost:8080/admin`. Para fix
 4. Valide as fontes de dados: `npm run probe`. Ele testa Termux:API, rede, Open-Meteo e o uso do Claude, um por um.
 5. No Android: tire o Termux da otimização de bateria, ligue a proteção de bateria (limite de carga) e reserve um IP fixo para o S20 no roteador.
 
-### Login do Claude (OAuth)
+### Conta Claude (assinatura, não API)
 
-O painel lê o uso da assinatura com o token OAuth do Claude Code. Dois caminhos, escolhidos no `/admin`:
+Em `/admin` → Claude, clique em **Entrar com a conta Claude**. Abre uma aba do claude.ai; entre, autorize, copie o código que a página mostra e cole no `/admin`. Pronto: o painel passa a ler o uso da assinatura e renova o acesso sozinho. O acesso pedido é só de leitura do perfil e do uso (`user:profile`) e fica guardado apenas no celular, em `data/secrets.json`.
 
-- **No próprio S20 (recomendado):** instale o Claude Code no Termux (`npm install -g @anthropic-ai/claude-code`), rode `claude` e faça o login. O painel lê `~/.claude/.credentials.json` e renova o token sozinho, regravando o arquivo.
-- **Colando credenciais:** no PC, copie o conteúdo de `~/.claude/.credentials.json` (Linux e Windows; no macOS fica no Keychain) e cole em `/admin` → Claude. Como o refresh token é rotativo, o Claude Code do PC pode pedir login de novo depois que o S20 renovar o dele.
+É o mesmo fluxo de login do Claude Code, usado aqui por um programa que não é o Claude Code. O endpoint de uso não é documentado e os termos da Anthropic restringem o uso do login da assinatura fora dos produtos dela; pode parar de funcionar sem aviso. Nesse caso o painel mostra "sem dados" no bloco do Claude, espaça as tentativas e o resto segue funcionando. O motivo aparece em `/admin` → Estado da coleta.
 
-O endpoint de uso não é documentado e pode mudar ou responder 429. Nesse caso o painel mostra "sem dados" no bloco do Claude, espaça as tentativas e o resto segue funcionando. O motivo aparece em `/admin` → Estado da coleta.
+Em "Opções avançadas" continuam disponíveis colar o `.credentials.json` do Claude Code ou apontar para o arquivo dele no aparelho.
 
 ### Fully Kiosk Browser
 
