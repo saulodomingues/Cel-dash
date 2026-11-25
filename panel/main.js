@@ -1,5 +1,5 @@
 // Painel: recebe dados e configuração por SSE, alterna as telas e cuida do burn-in.
-import { tela1 } from './screens/tela1.js';
+import { tela1, mount as mountTela1 } from './screens/tela1.js';
 import { tela2 } from './screens/tela2.js';
 import { tela3 } from './screens/tela3.js';
 import { idle } from './screens/idle.js';
@@ -10,7 +10,7 @@ import * as burnin from './burnin.js';
 
 const SCREENS = { tela1, tela2, tela3, gif, news };
 // telas com parte animada própria: chamadas depois que o HTML muda
-const MOUNT = { news: mountNews };
+const MOUNT = { news: mountNews, tela1: mountTela1 };
 // telas que só entram na rotação se tiverem conteúdo
 const HAS_CONTENT = { gif: (c) => (c.gif?.items || []).length > 0, news: (c, d) => (d.news?.data?.items || []).length > 0 };
 const W = 780, H = 360;
@@ -37,11 +37,13 @@ function render() {
     // não recria o que não mudou: senão o GIF recomeçaria a cada atualização de dado
     if (html !== st.lastHtml) {
       // imagens marcadas com data-keep (GIFs) voltam as mesmas: a animação segue sem reiniciar
-      const keep = new Map([...stage.querySelectorAll('img[data-keep]')].map((i) => [i.getAttribute('src'), i]));
+      // elementos com data-keep (GIFs, letreiro) voltam os mesmos: a animação segue sem reiniciar
+      const keyOf = (el) => el.getAttribute('data-keep') || el.getAttribute('src');
+      const keep = new Map([...stage.querySelectorAll('[data-keep]')].map((el) => [keyOf(el), el]));
       stage.innerHTML = html; st.lastHtml = html;
-      for (const n of stage.querySelectorAll('img[data-keep]')) {
-        const old = keep.get(n.getAttribute('src'));
-        if (old) { old.setAttribute('style', n.getAttribute('style') || ''); n.replaceWith(old); keep.delete(n.getAttribute('src')); }
+      for (const n of stage.querySelectorAll('[data-keep]')) {
+        const old = keep.get(keyOf(n));
+        if (old) { old.setAttribute('style', n.getAttribute('style') || ''); n.replaceWith(old); keep.delete(keyOf(n)); }
       }
       if (st.mode !== 'idle' && MOUNT[st.current]) MOUNT[st.current](stage);
     }

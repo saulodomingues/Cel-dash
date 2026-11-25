@@ -204,7 +204,8 @@ function newsSection() {
   const errList = Object.entries(errs);
   return `
 <section class="card"><h2>Manchetes</h2>
-<p class="muted">Tela de notícias que passam sozinhas: manchete grande trocando e letreiro no rodapé. Liga e desliga em Telas, acima. As manchetes vêm dos feeds públicos (RSS) dos sites.</p>
+<p class="muted">Tela de notícias que passam sozinhas (liga e desliga em Telas, acima) e letreiro "AGORA" opcional no rodapé da tela principal. As manchetes vêm dos feeds públicos (RSS) dos sites.</p>
+<div class="grid" style="margin-bottom:8px">${field('news.ticker', 'Mostrar letreiro "AGORA" na tela principal', 'checkbox')}</div>
 <div class="muted" style="margin-bottom:4px">Fontes</div>
 <div class="qgrid">${NEWS_FEEDS.map((f) => `<label class="check"><input type="checkbox" data-feed="${f.id}" ${n.feeds.includes(f.id) ? 'checked' : ''}>${esc(f.name)}</label>`).join('')}</div>
 <div class="row" style="margin-top:8px"><label><span>Outros feeds (um endereço por linha)</span><textarea id="newsCustom" placeholder="https://site.com.br/feed/" spellcheck="false" style="min-height:60px">${esc(n.custom.join('\n'))}</textarea></label></div>

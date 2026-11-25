@@ -44,7 +44,7 @@ export const DEFAULTS = {
   update: { enabled: true, intervalMin: 5 },
   weather: { intervalMin: 15 },
   // manchetes: fontes do catálogo (widgets/news/catalog.shared.js) + endereços de feed colados
-  news: { feeds: ['g1', 'folha', 'bbc', 'agbrasil', 'tecnoblog'], custom: [], seconds: 12, crawl: 'normal', intervalMin: 10, maxAgeHours: 12, blockWords: [], maxItems: 20 },
+  news: { feeds: ['g1', 'folha', 'bbc', 'agbrasil', 'tecnoblog'], custom: [], ticker: true, seconds: 12, crawl: 'normal', intervalMin: 10, maxAgeHours: 12, blockWords: [], maxItems: 20 },
   quotes: { items: ['USD', 'EUR', 'BTC', 'ETH', 'IBOV', 'SPX'], intervalMin: 5 }, // ids de widgets/quotes/catalog.shared.js, até 6
   claude: {
     intervalMin: 10,

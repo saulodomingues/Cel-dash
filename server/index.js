@@ -67,7 +67,7 @@ function serveFile(res, file) {
   });
 }
 
-// Só estas pastas são públicas; dos widgets, só o view.js e módulos *.shared.js (o coletor fica no servidor).
+// Só estas pastas são públicas; dos widgets, só view.js, *.view.js e *.shared.js (o coletor fica no servidor).
 function staticPath(urlPath) {
   const p = path.posix.normalize(decodeURIComponent(urlPath));
   if (p.includes('..') || p.includes('\0')) return null;
@@ -77,7 +77,7 @@ function staticPath(urlPath) {
   if (p === '/manifest.webmanifest') return 'panel/manifest.webmanifest';
   if (p === '/sw.js') return 'panel/sw.js';
   if (/^\/(panel|admin)\/[\w./-]+$/.test(p)) return p.slice(1);
-  if (/^\/widgets\/[\w-]+\/(view|[\w-]+\.shared)\.js$/.test(p)) return p.slice(1);
+  if (/^\/widgets\/[\w-]+\/(view|[\w-]+\.(shared|view))\.js$/.test(p)) return p.slice(1);
   return null;
 }
 

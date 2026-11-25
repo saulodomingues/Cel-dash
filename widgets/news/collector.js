@@ -1,6 +1,6 @@
 // Manchetes de feeds RSS/Atom. Parser próprio e simples (sem dependências): título, link, data,
 // resumo e fonte. Um feed com erro fica de fora; os outros seguem. Só busca se a tela de
-// manchetes estiver ligada.
+// manchetes ou o letreiro da tela principal estiver ligado.
 import { FEEDS } from './catalog.shared.js';
 
 export const id = 'news';
@@ -84,7 +84,7 @@ export function mix(lists, cfg, now = Date.now()) {
 }
 
 export async function collect({ config }) {
-  if (!config.screens.some((s) => s.id === 'news' && s.enabled)) return { items: [], idle: true };
+  if (!config.news.ticker && !config.screens.some((s) => s.id === 'news' && s.enabled)) return { items: [], idle: true };
   const n = config.news;
   const feeds = [
     ...FEEDS.filter((f) => n.feeds.includes(f.id)),

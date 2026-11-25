@@ -72,6 +72,7 @@ O aparelho é um **Galaxy S20** (o briefing original dizia S22 por engano; os mo
 Arquivos: `mocks/telaN.html` (HTML estático, abre direto no navegador) e `mocks/telaN.png`.
 
 **Tela 1: principal**
+- Espaço entre os cards: 4 px (era 8 px; reduzido a pedido em 25/11/2026).
 - Linha de cima: relógio grande com data (esquerda; o status "online · IP", que abre o `/admin` ao toque, foi para a direita do cabeçalho do card do Claude em 25/11/2026) e tempo (direita: atual, sensação, chuva, vento, previsão de 5 dias).
 - Linha de baixo, card inteiro "Claude · assinatura Max": três anéis na ordem **sessão de 5 h, semana do Fable, semana de todos os modelos**, cada um com percentual no centro e quando renova; à direita, barras dos últimos 7 dias.
 
@@ -86,7 +87,7 @@ Arquivos: `mocks/telaN.html` (HTML estático, abre direto no navegador) e `mocks
 **Tela Manchetes** (`news`, aprovada em 25/11/2026, no estilo de canal de notícias; feita para ler sem tocar)
 - Topo: "● MANCHETES", quando atualizou e quantas fontes; relógio no canto superior direito.
 - Centro: uma manchete grande por vez (fonte, há quanto tempo, n/N, resumo de 2 linhas), troca sozinha a cada `news.seconds` (12 s) subindo e saindo; "A seguir" e barra vermelha de tempo embaixo.
-- Rodapé: faixa "AGORA" com todas as manchetes passando (letreiro em CSS, velocidade constante).
+- Sem letreiro: o "AGORA" foi para o rodapé da tela principal (opcional, `news.ticker`, padrão ligado; `widgets/news/ticker.view.js`): faixa de 22 px com as manchetes passando, preservada entre redesenhos por `data-keep`; some sem manchetes. Com ele, o card do tempo fica mais compacto.
 - `widgets/news/`: parser RSS/Atom próprio (CDATA, entidades; codificação pelo XML, pelo cabeçalho HTTP e, se o texto não for UTF-8 válido, Latin-1 — o UOL manda Latin-1 sem declarar), dedup por título, filtro de horas e palavras, mistura as fontes no começo da fila. Só busca com a tela ligada. A troca e o letreiro rodam em `mountNews`, chamado pelo painel depois que o HTML da tela muda; a posição na fila continua quando a tela volta na rotação.
 - Config em `/admin` → Manchetes: fontes do catálogo, outros feeds (URL), tempo por manchete, velocidade do letreiro, intervalo, idade máxima, quantidade, palavras para esconder. Endereços dos feeds do catálogo não testados daqui (rede bloqueada).
 
@@ -120,7 +121,7 @@ Terceira opção do espaço ao lado do relógio (`tela1.clockExtra = 'quotes'`),
 
 ## Calendário ao lado do relógio (tela 1)
 
-Escolhido em 25/11/2026 para o espaço livre do card do relógio. `widgets/calendar/`: mês com hoje marcado, feriados nacionais em vermelho e pontos facultativos (Carnaval, Corpus Christi) em lilás, e a linha "próximo feriado". Feriados calculados no aparelho (Páscoa por Meeus), sem internet. Com ele o relógio cai de 84 para 64 px. O widget do lado direito ocupa a altura toda do card (calendário em escala 1,2: 134 px de largura). Liga/desliga em `/admin` → Telas (`tela1.clockExtra`). Módulos de widget que o navegador precisa além do `view.js` se chamam `*.shared.js`.
+Escolhido em 25/11/2026 para o espaço livre do card do relógio. `widgets/calendar/`: mês com hoje marcado, feriados nacionais em vermelho e pontos facultativos (Carnaval, Corpus Christi) em lilás, e a linha "próximo feriado". Feriados calculados no aparelho (Páscoa por Meeus), sem internet. Com ele o relógio cai de 84 para 64 px. O widget do lado direito ocupa a altura toda do card (calendário em escala 1,2: 134 px de largura). Liga/desliga em `/admin` → Telas (`tela1.clockExtra`). Módulos de widget que o navegador precisa além do `view.js` se chamam `*.shared.js` (servidor e navegador) ou `*.view.js` (só navegador); o servidor só entrega esses.
 
 ## Cor (opção C, escolhida em 25/11/2026)
 

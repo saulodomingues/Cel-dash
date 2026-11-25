@@ -1,8 +1,8 @@
-// Tela "Manchetes": manchete grande que troca sozinha, "a seguir", barra de tempo e letreiro no rodapé.
+// Tela "Manchetes": manchete grande que troca sozinha, "a seguir" e barra de tempo. O letreiro "AGORA"
+// fica na tela principal (opcional), em ticker.js.
 // O HTML só muda quando chegam manchetes novas; a troca e o letreiro são feitos por mountNews,
 // que roda no navegador sem redesenhar a tela (o painel redesenha a cada minuto).
 import { esc, ago } from '/panel/lib.js';
-import { CRAWL_SPEED } from './catalog.shared.js';
 import { clockMood } from '/panel/mood.js';
 
 const RED = '#E5484D';
@@ -11,14 +11,12 @@ export function newsScreen({ data, config, now = Date.now() }) {
   const w = data.news;
   const items = w?.data?.items || [];
   const n = config.news;
-  const payload = esc(JSON.stringify({ items, at: w?.at || null, sources: w?.data?.sources ?? null, sec: n.seconds, speed: CRAWL_SPEED[n.crawl] || 70 }));
+  const payload = esc(JSON.stringify({ items, at: w?.at || null, sources: w?.data?.sources ?? null, sec: n.seconds}));
   return `
 <style>
 #news .story { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; transition: transform .7s ease, opacity .7s ease; }
 #news .story.out { transform: translateY(-40px); opacity: 0; }
 #news .story.in { transform: translateY(40px); opacity: 0; }
-#news .track { display: inline-block; padding-left: 100%; font-size: 15px; animation: news-crawl linear infinite; }
-@keyframes news-crawl { to { transform: translateX(-100%); } }
 </style>
 <div id="news" data-news="${payload}" style="width: 780px; height: 360px; box-sizing: border-box; padding: 16px 22px 0; background: #000000; color: #E8EAED; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif">
 <div style="display: flex; align-items: center; gap: 10px">
@@ -28,11 +26,7 @@ export function newsScreen({ data, config, now = Date.now() }) {
 </div>
 <div data-news-main style="position: relative; flex: 1; min-height: 0; overflow: hidden">${items.length ? '' : `<div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #9AA0A6; font-size: 13px">${w?.error ? 'sem manchetes · veja o motivo no /admin' : 'carregando manchetes…'}</div>`}</div>
 <div data-news-next style="font-size: 12.5px; color: #6B7078; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"></div>
-<div style="height: 3px; background: #1C1E22; border-radius: 2px; overflow: hidden; margin-bottom: 10px"><div data-news-bar style="height: 100%; width: 0; background: ${RED}"></div></div>
-<div style="height: 38px; margin: 0 -22px; display: flex; align-items: center; overflow: hidden; white-space: nowrap; background: #0D0E10; border-top: 1px solid #1C1E22">
-<span style="flex: none; height: 100%; display: flex; align-items: center; padding: 0 14px; background: ${RED}; color: #fff; font-size: 12px; font-weight: 600; letter-spacing: 0.12em">AGORA</span>
-<span style="overflow: hidden; flex: 1"><span class="track" data-news-track></span></span>
-</div>
+<div style="height: 3px; background: #1C1E22; border-radius: 2px; overflow: hidden; margin-bottom: 18px"><div data-news-bar style="height: 100%; width: 0; background: ${RED}"></div></div>
 </div>`;
 }
 
@@ -56,10 +50,6 @@ export function mountNews(root) {
   const updAge = () => { age.textContent = [ago({ at: cfg.at }, Date.now()), cfg.sources ? `${cfg.sources} ${cfg.sources > 1 ? 'fontes' : 'fonte'}` : ''].filter(Boolean).join(' · '); };
   updAge();
   if (!items.length) return;
-  // letreiro: todas as manchetes; a duração depende do tamanho, para a velocidade ser constante
-  const track = el.querySelector('[data-news-track]');
-  track.innerHTML = items.map((it) => `<b style="color: ${RED}; font-size: 12px; letter-spacing: .08em">${esc(it.source.toUpperCase())}</b>&nbsp; ${esc(it.title)}`).join('<span style="color: #3A3D44; padding: 0 14px">•</span>');
-  requestAnimationFrame(() => { track.style.animationDuration = `${Math.max(10, (track.scrollWidth + track.parentElement.clientWidth) / cfg.speed)}s`; });
   const key = items.map((x) => x.title).join('|');
   let i = resume.key === key ? resume.i : -1, cur = null;
   const show = () => {

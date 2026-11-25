@@ -22,7 +22,7 @@ export function icon(name, size = 44) {
 }
 
 // Tela 1: atual + 5 dias.
-export function weatherCard(w, now, chip = '#14161A') {
+export function weatherCard(w, now, chip = '#14161A', compact = false) {
   const d = w?.data;
   const alert = nowcastText(d?.nowcast, now, true);
   const head = cardHead('Tempo', w, now, alert ? `<span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(138,180,248,0.14); color: #8AB4F8; border-radius: 999px; padding: 2px 9px; font-size: 11px; letter-spacing: 0; white-space: nowrap">☂ ${esc(alert)}</span>` : '');
@@ -38,7 +38,7 @@ ${icon(c.icon)}
 <div style="font-size: 12px; color: #C4C7CC; margin-top: 4px; white-space: nowrap">${esc(c.text)}</div>
 </div>
 </div>
-<div style="display: grid; grid-template-columns: auto auto; column-gap: 12px; row-gap: 4px; font-size: 12px; color: #9AA0A6">
+<div style="display: grid; grid-template-columns: auto auto; column-gap: 12px; row-gap: ${compact ? 1 : 4}px; font-size: 12px; color: #9AA0A6">
 <span>Sensação</span><span style="color: #E8EAED; text-align: right">${deg(c.feels)}</span>
 <span>Chuva</span><span style="color: #E8EAED; text-align: right">${pct(c.rain)}</span>
 <span>Vento</span><span style="color: #E8EAED; text-align: right">${num(c.wind)} km/h</span>
@@ -46,7 +46,7 @@ ${air ? `<span>Ar</span><span style="color: ${air[1]}; text-align: right; white-
 </div>
 </div>
 <div style="margin-top: auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; font-size: 11px; color: #9AA0A6; text-align: center">
-${d.days.slice(0, 5).map((x) => `<div style="background: ${chip}; border-radius: 8px; padding: 6px 0">${WD[new Date(x.t).getDay()]}<div style="color: #E8EAED; font-size: 13px; margin-top: 2px">${deg(x.max)} <span style="color: #9AA0A6">${deg(x.min)}</span></div></div>`).join('\n')}
+${d.days.slice(0, 5).map((x) => `<div style="background: ${chip}; border-radius: 8px; padding: ${compact ? 4 : 6}px 0">${WD[new Date(x.t).getDay()]}<div style="color: #E8EAED; font-size: 13px; margin-top: 2px">${deg(x.max)} <span style="color: #9AA0A6">${deg(x.min)}</span></div></div>`).join('\n')}
 </div>`;
 }
 
