@@ -19,6 +19,7 @@ export const DEFAULTS = {
     { id: 'tela2', enabled: true },
     { id: 'tela3', enabled: true },
   ],
+  tela1: { clockExtra: 'calendar' }, // 'calendar' | 'none'
   rotation: { intervalSec: 180, tapNext: true },
   pixelShift: { intervalSec: 60, maxPx: 4 },
   brightness: { day: 35, night: 8 },
@@ -73,6 +74,7 @@ function sanitize(c) {
   }
   for (const id of known) if (!seen.has(id)) screens.push({ id, enabled: true });
   c.screens = screens;
+  c.tela1.clockExtra = ['calendar', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
   c.port = clamp(Math.round(c.port), 1024, 65535);
   c.city.lat = clamp(c.city.lat, -90, 90);
   c.city.lon = clamp(c.city.lon, -180, 180);

@@ -160,6 +160,10 @@ function render() {
 <div class="grid" style="margin-top:12px">
 ${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20" max="3600"')}
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
+<label>Ao lado do relógio (tela principal)<select data-path="tela1.clockExtra">
+<option value="calendar" ${S.config.tela1.clockExtra === 'calendar' ? 'selected' : ''}>Calendário do mês com feriados</option>
+<option value="none" ${S.config.tela1.clockExtra === 'none' ? 'selected' : ''}>Nada (relógio grande)</option>
+</select></label>
 </div></section>
 
 <section class="card"><h2>Estado da coleta</h2><p class="muted">Se uma fonte falha, o painel mantém o último dado e segue funcionando.</p>

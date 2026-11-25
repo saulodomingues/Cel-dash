@@ -182,3 +182,19 @@ test('cor: ritmo de uso vira laranja se estoura antes de renovar, vermelho perto
   assert.equal(runOut({ pct: 20, resetsAt: now + WEEK_MS - 3600_000 }, WEEK_MS, now), null);
   assert.equal(usageMood({ pct: null, unlimited: true }, '#F5A524', WEEK_MS, now).color, '#F5A524');
 });
+
+test('calendário: Páscoa e feriados nacionais calculados no aparelho', async () => {
+  const { easter, holidays, nextHoliday } = await import('../widgets/calendar/holidays.shared.js');
+  const ymd = (d) => [d.getFullYear(), d.getMonth() + 1, d.getDate()].join('-');
+  assert.equal(ymd(easter(2026)), '2026-4-5');
+  assert.equal(ymd(easter(2027)), '2027-3-28');
+  const h26 = holidays(2026);
+  assert.equal(ymd(h26.find((h) => h.name === 'Sexta-feira Santa').date), '2026-4-3');
+  assert.equal(ymd(h26.find((h) => h.name === 'Corpus Christi').date), '2026-6-4');
+  assert.deepEqual(h26.filter((h) => h.name === 'Carnaval').map((h) => ymd(h.date)), ['2026-2-16', '2026-2-17']);
+  assert.ok(h26.some((h) => h.name === 'Consciência Negra'));
+  const n = nextHoliday(new Date(2026, 10, 25, 13).getTime());
+  assert.equal(n.name, 'Natal'); assert.equal(n.days, 30);
+  assert.equal(nextHoliday(new Date(2026, 11, 31, 9).getTime()).name, 'Confraternização Universal'); // vira o ano
+  assert.equal(nextHoliday(new Date(2026, 8, 7, 23, 58).getTime()).days, 0);
+});

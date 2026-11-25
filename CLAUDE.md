@@ -89,6 +89,10 @@ Todos os números dos mocks são de exemplo.
 - Fontes: Space Grotesk para números, Inter para o resto. Os mocks carregam do Google Fonts; no aparelho, sirva as fontes localmente para funcionar sem internet.
 - Margem externa de 12 px na tela 1: é a folga do pixel shift.
 
+## Calendário ao lado do relógio (tela 1)
+
+Escolhido em 25/11/2026 para o espaço livre do card do relógio. `widgets/calendar/`: mês com hoje marcado, feriados nacionais em vermelho e pontos facultativos (Carnaval, Corpus Christi) em lilás, e a linha "próximo feriado". Feriados calculados no aparelho (Páscoa por Meeus), sem internet. Com ele o relógio cai de 84 para 64 px. Liga/desliga em `/admin` → Telas (`tela1.clockExtra`). Módulos de widget que o navegador precisa além do `view.js` se chamam `*.shared.js`.
+
 ## Cor (opção C, escolhida em 25/11/2026)
 
 Cor com significado, em `panel/mood.js`. Fundo continua preto; tons de fundo sempre muito escuros.

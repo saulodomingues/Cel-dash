@@ -3,20 +3,28 @@
 import { esc, hm, pad, dateLong, dateShort, SG } from '/panel/lib.js';
 
 // Tela 1: relógio grande com cidade, status e IP.
-export function clockCard(now, city, sys, digits = '#C4C7CC') {
+// `extra`: HTML de um widget pequeno para o lado direito (ex.: mini calendário). Com ele,
+// o relógio encolhe um pouco para os dois caberem lado a lado.
+export function clockCard(now, city, sys, digits = '#C4C7CC', extra = '') {
   const online = sys?.data ? sys.data.online : null;
   const dot = online === null ? '#9AA0A6' : online ? '#4ADE80' : '#F5A524';
   const status = [online === null ? 'sem dados' : online ? 'online' : 'sem internet', sys?.data?.ip].filter(Boolean).join(' · ');
+  const [big, small, date] = extra ? [64, 20, 13] : [84, 26, 15];
+  const clock = `
+<div style="display: flex; align-items: baseline; gap: 5px; ${SG}">
+<span data-clock="hm" style="font-size: ${big}px; line-height: 1; font-weight: 500; letter-spacing: -0.03em; color: ${digits}">${hm(now)}</span>
+<span data-clock="s" style="font-size: ${small}px; color: #9AA0A6">${pad(new Date(now).getSeconds())}</span>
+</div>
+<div data-clock="long" style="font-size: ${date}px; color: #C4C7CC; white-space: nowrap">${dateLong(now)}</div>`;
   return `
 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #9AA0A6; letter-spacing: 0.04em">
 <span>${esc(city)}</span>
 <span style="display: flex; align-items: center; gap: 6px"><span style="width: 6px; height: 6px; border-radius: 50%; background: ${dot}"></span>${esc(status)}</span>
 </div>
-<div style="display: flex; align-items: baseline; gap: 6px; ${SG}">
-<span data-clock="hm" style="font-size: 84px; line-height: 1; font-weight: 500; letter-spacing: -0.03em; color: ${digits}">${hm(now)}</span>
-<span data-clock="s" style="font-size: 26px; color: #9AA0A6">${pad(new Date(now).getSeconds())}</span>
-</div>
-<div data-clock="long" style="font-size: 15px; color: #C4C7CC">${dateLong(now)}</div>`;
+${extra ? `<div style="flex: 1; min-height: 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 6px">
+<div style="min-width: 0; display: flex; flex-direction: column; justify-content: space-between; align-self: stretch; padding-top: 10px">${clock}</div>
+${extra}
+</div>` : clock}`;
 }
 
 // Telas 2 e 3: relógio pequeno de canto.

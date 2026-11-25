@@ -65,7 +65,7 @@ function serveFile(res, file) {
   });
 }
 
-// Só estas pastas são públicas; dos widgets, só o view.js (o coletor fica no servidor).
+// Só estas pastas são públicas; dos widgets, só o view.js e módulos *.shared.js (o coletor fica no servidor).
 function staticPath(urlPath) {
   const p = path.posix.normalize(decodeURIComponent(urlPath));
   if (p.includes('..') || p.includes('\0')) return null;
@@ -73,7 +73,7 @@ function staticPath(urlPath) {
   if (p === '/admin' || p === '/admin/') return 'admin/index.html';
   if (p === '/probe') return 'panel/probe.html';
   if (/^\/(panel|admin)\/[\w./-]+$/.test(p)) return p.slice(1);
-  if (/^\/widgets\/[\w-]+\/view\.js$/.test(p)) return p.slice(1);
+  if (/^\/widgets\/[\w-]+\/(view|[\w-]+\.shared)\.js$/.test(p)) return p.slice(1);
   return null;
 }
 
