@@ -11,13 +11,14 @@ import { ROOT, DATA_DIR, getConfig, setConfig, publicConfig, getSecrets, saveSec
 import * as auth from './auth.js';
 import * as scheduler from './scheduler.js';
 import * as updater from './updater.js';
+import * as display from './display.js';
 import * as claudeAuth from '../widgets/claude/auth.js';
 import * as claudeCollector from '../widgets/claude/collector.js';
 
 const DEMO = process.env.DEMO === '1';
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.webmanifest': 'application/manifest+json; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.woff2': 'font/woff2', '.png': 'image/png', '.gif': 'image/gif', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8',
 };
 
@@ -73,6 +74,8 @@ function staticPath(urlPath) {
   if (p === '/') return 'panel/index.html';
   if (p === '/admin' || p === '/admin/') return 'admin/index.html';
   if (p === '/probe') return 'panel/probe.html';
+  if (p === '/manifest.webmanifest') return 'panel/manifest.webmanifest';
+  if (p === '/sw.js') return 'panel/sw.js';
   if (/^\/(panel|admin)\/[\w./-]+$/.test(p)) return p.slice(1);
   if (/^\/widgets\/[\w-]+\/(view|[\w-]+\.shared)\.js$/.test(p)) return p.slice(1);
   return null;
@@ -175,7 +178,7 @@ async function api(req, res, url) {
   }
   if (p === '/api/admin/config' && m === 'GET') {
     return send(res, 200, {
-      config: getConfig(), secrets: secretsStatus(), status: scheduler.state, demo: DEMO, update: updater.status, claudeRaw: claudeCollector.lastRaw,
+      config: getConfig(), secrets: secretsStatus(), status: scheduler.state, demo: DEMO, update: updater.status, display: display.status, claudeRaw: claudeCollector.lastRaw,
       server: { ips: localIps(), port: getConfig().port, uptimeSec: Math.round(process.uptime()), node: process.version },
     });
   }
@@ -183,6 +186,7 @@ async function api(req, res, url) {
     const before = getConfig();
     const after = setConfig(await readBody(req));
     broadcast('config', publicConfig());
+    display.apply(true);
     if (JSON.stringify(before.city) !== JSON.stringify(after.city)) scheduler.refresh('weather');
     if (JSON.stringify(before.claude) !== JSON.stringify(after.claude)) scheduler.refresh('claude');
     if (JSON.stringify(before.system) !== JSON.stringify(after.system)) scheduler.refresh('system');
@@ -296,6 +300,7 @@ const server = http.createServer(async (req, res) => {
 
 await updater.init();
 updater.start();
+display.start();
 await scheduler.loadCollectors();
 scheduler.start((id, st) => broadcast('data', { id, state: st }));
 

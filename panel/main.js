@@ -86,7 +86,7 @@ function loop() {
     blackout.style.display = m === 'off' ? 'block' : 'none';
     render();
   }
-  if (!PREVIEW) burnin.apply(now, st.config, m);
+  if (!PREVIEW && st.config.display?.browser === 'fully') burnin.apply(now, st.config, m);
   if (!enabled().includes(st.current)) st.current = enabled()[0];
   if (m === 'on' && !PINNED && now - st.lastRotate >= st.config.rotation.intervalSec * 1000) next();
   const minute = Math.floor(now / 60_000);
@@ -151,6 +151,19 @@ if (!PREVIEW) {
 }
 
 addEventListener('resize', layout);
+
+// ---------- Chrome (sem Fully Kiosk) ----------
+// Tela sempre ligada pelo próprio navegador. Só funciona em contexto seguro: no celular,
+// abrindo por http://localhost:8080 (é o caso do app instalado na tela inicial).
+let wake = null;
+async function keepAwake() {
+  if (PREVIEW || st.config?.display?.browser === 'fully' || burnin.hasFully() || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+  try { wake = await navigator.wakeLock.request('screen'); } catch { /* sem permissão: segue sem */ }
+}
+document.addEventListener('visibilitychange', keepAwake);
+keepAwake();
+// Registra o service worker mínimo, para o Chrome oferecer "Instalar app" (tela cheia).
+if (!PREVIEW && 'serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch(() => {});
 // As miniaturas do /admin (?preview) não abrem conexão contínua: o navegador permite só 6
 // conexões por endereço, e 4 miniaturas + o painel em outra aba travavam o envio de GIFs.
 if (PREVIEW) {

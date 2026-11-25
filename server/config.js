@@ -32,6 +32,9 @@ export const DEFAULTS = {
   rotation: { intervalSec: 180, tapNext: true },
   pixelShift: { intervalSec: 60, maxPx: 4 },
   brightness: { day: 35, night: 8 },
+  // navegador do painel no celular: 'chrome' (brilho pelo Termux, tela preta no horário de apagar)
+  // ou 'fully' (Fully Kiosk: brilho, apagar a tela e detecção de movimento pela interface dele)
+  display: { browser: 'chrome' },
   night: { start: '22:00', end: '07:00' },
   sleep: { enabled: false, start: '00:30', end: '06:30' },
   idle: { enabled: true, afterMin: 10, offAfterMin: 20 },
@@ -89,6 +92,7 @@ function sanitize(c) {
   if (!got.some((g) => g.enabled) && !c.claudeView.showStats) c.claudeView.showStats = true; // card nunca vazio
   c.claudeView.counters = got;
   if (c.claudeView.gif !== '*' && !c.gif.items.some((i) => i.file === c.claudeView.gif)) c.claudeView.gif = '';
+  c.display.browser = c.display.browser === 'fully' ? 'fully' : 'chrome';
   c.gif.fit = c.gif.fit === 'cover' ? 'cover' : 'contain';
   c.gif.items = c.gif.items.filter((i) => i && /^[a-f0-9]{16}\.(gif|png|jpg|webp)$/.test(i.file)).map((i) => ({ file: i.file, name: String(i.name || i.file).slice(0, 80) }));
   if (c.gif.full !== '*' && !c.gif.items.some((i) => i.file === c.gif.full)) c.gif.full = '*';

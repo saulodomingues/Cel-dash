@@ -14,6 +14,8 @@ Implementado e testado só no PC (modo demo, `npm test`, navegador de 780×360).
 - Atualização automática: `server/updater.js` faz `git pull` a cada 5 min e sai; `scripts/run.sh` sobe de novo; o painel recarrega ao ver a versão mudar. O S20 segue o ramo que clonou.
 - O limite semanal por modelo é detectado na resposta (`seven_day_<modelo>`); se não houver o do Fable, o anel do meio fica sem dados ou usa o modelo escolhido no `/admin`.
 
+Navegador do painel (`display.browser`, escolhido em 25/11/2026): **Chrome** por padrão — painel instalável como app (manifest + service worker mínimo, tela cheia, deitado), tela ligada por Wake Lock (só em `http://localhost`), brilho pelo servidor com `termux-brightness` (`server/display.js`, precisa da permissão "Modificar configurações do sistema" no Termux:API), horário de apagar = painel preto. Sem tela ociosa. **Fully** continua disponível como opção (brilho, apagar e movimento pela interface dele).
+
 Não validado: chamadas reais ao Open-Meteo e ao endpoint de uso, Termux:API, interface JavaScript do Fully Kiosk (brilho, apagar, movimento), fator de escala no aparelho. Rode `npm run probe` e abra `/probe` no S20.
 
 ## Como trabalhar neste projeto

@@ -1,6 +1,7 @@
 // Proteção do AMOLED: pixel shift, brilho por horário, tela ociosa e tela apagada.
-// Brilho, apagar/acender e detecção de movimento dependem da interface JavaScript do
-// Fully Kiosk Browser (objeto `fully`). Fora dele, só o pixel shift e a rotação funcionam.
+// Com display.browser = 'fully': brilho, apagar/acender e detecção de movimento pela interface
+// JavaScript do Fully Kiosk (objeto `fully`). Com 'chrome' (padrão): o brilho vem do servidor
+// (termux-brightness), o horário de apagar deixa o painel preto e não há tela ociosa.
 const F = () => (typeof window.fully !== 'undefined' ? window.fully : null);
 export const hasFully = () => Boolean(F());
 
@@ -52,10 +53,11 @@ export function bindFully() {
 
 // 'on' | 'idle' | 'off'
 export function mode(now, cfg) {
+  const fully = cfg.display?.browser === 'fully';
   if (now < wakeUntil) return 'on';
   if (cfg.sleep.enabled && inRange(now, cfg.sleep.start, cfg.sleep.end)) return 'off';
   // sem detecção de movimento não dá para saber se há alguém: nunca entra em ocioso sozinho
-  if (cfg.idle.enabled && motionSeen) {
+  if (fully && cfg.idle.enabled && motionSeen) {
     const quiet = (now - lastActivity) / 60_000;
     if (cfg.idle.offAfterMin > 0 && quiet >= cfg.idle.afterMin + cfg.idle.offAfterMin) return 'off';
     if (quiet >= cfg.idle.afterMin) return 'idle';

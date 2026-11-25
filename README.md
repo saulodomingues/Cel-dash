@@ -36,13 +36,24 @@ Em `/admin` → Claude, clique em **Entrar com a conta Claude**. Abre uma aba do
 
 Em "Opções avançadas" continuam disponíveis colar o `.credentials.json` do Claude Code ou apontar para o arquivo dele no aparelho.
 
-### Fully Kiosk Browser
+### Navegador do painel: Chrome (padrão)
+
+1. No Chrome do S20, abra `http://localhost:8080/` (tem que ser `localhost`, não o IP: só assim o Chrome permite manter a tela ligada e instalar como app).
+2. Menu ⋮ → **Instalar app** (ou "Adicionar à tela inicial"). Abra pelo ícone novo "Painel": ele abre em tela cheia, deitado e sem barra de endereço.
+3. Brilho por horário: o servidor ajusta com `termux-brightness`. Dê a permissão em Configurações do Android → Apps → **Termux:API** → **Modificar configurações do sistema** → permitir. O resultado aparece em `/admin` → Brilho e descanso da tela.
+4. No horário de tela apagada (configurado no `/admin`), o painel fica todo preto e o brilho vai ao mínimo. No AMOLED, pixel preto fica desligado.
+5. Não há detecção de movimento no Chrome, então não há tela ociosa.
+
+Para conferir: abra `http://localhost:8080/probe` pelo app; ele mostra a resolução, se a tela fica ligada pelo navegador e se está em tela cheia.
+
+### Opcional: Fully Kiosk Browser
+
+Se quiser detecção de movimento pela câmera (tela ociosa e apagar quando não há ninguém), use o Fully (licença Plus paga) e escolha **Fully Kiosk Browser** em `/admin` → Brilho e descanso da tela → "Navegador do painel". Configuração do Fully:
 
 - Start URL: `http://localhost:8080/`
 - Tela deitada, tela cheia, manter a tela ligada.
-- **Advanced Web Settings → Enable JavaScript Interface: ligado.** É por ela que o painel ajusta o brilho por horário, apaga e acende a tela e recebe a detecção de movimento.
-- **Motion Detection: ligado**, com "Turn Screen On on Motion". Sem ela a tela ociosa não entra (o painel não tem como saber se há alguém por perto).
-- Abra `http://localhost:8080/probe` para conferir a resolução que o navegador enxerga e se a interface JavaScript está ativa.
+- **Advanced Web Settings → Enable JavaScript Interface: ligado.**
+- **Motion Detection: ligado**, com "Turn Screen On on Motion".
 
 ## Atualização automática
 

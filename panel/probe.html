@@ -21,7 +21,9 @@ function show() {
     `devicePixelRatio: <b>${devicePixelRatio}</b><br>` +
     `pixels físicos: <b>${Math.round(innerWidth * devicePixelRatio)}×${Math.round(innerHeight * devicePixelRatio)}</b><br>` +
     `escala do painel: <b>${Math.min(innerWidth / 780, innerHeight / 360).toFixed(3)}</b><br>` +
-    `Fully Kiosk (interface JavaScript): <b>${f ? 'disponível' : 'não disponível'}</b><br>`;
+    `Fully Kiosk (interface JavaScript): <b>${f ? 'disponível' : 'não disponível'}</b><br>` +
+    `Manter a tela ligada pelo navegador: <b>${'wakeLock' in navigator && isSecureContext ? 'disponível' : 'não disponível (abra por http://localhost:8080)'}</b><br>` +
+    `Aberto como app (tela cheia): <b>${matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches ? 'sim' : 'não'}</b><br>`;
 }
 show(); addEventListener('resize', show);
 </script>

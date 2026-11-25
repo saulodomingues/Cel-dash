@@ -253,6 +253,13 @@ ${field('claude.credentialsFile', 'Arquivo de credenciais', 'text')}
 </details>`;
 }
 
+function displayInfo() {
+  const d = S.display || {};
+  if (d.error) return `<span class="err">Brilho pelo Termux: ${esc(d.error)}</span> Se for permissão: Configurações do Android → Apps → Termux:API → "Modificar configurações do sistema" → permitir.`;
+  if (d.level === null || d.level === undefined) return 'Brilho pelo Termux: aguardando a primeira aplicação.';
+  return `Brilho pelo Termux: <b style="font-weight:500">${Math.round((d.level / 255) * 100)}%</b> agora (${ago(d.at)}).`;
+}
+
 function updateInfo() {
   const u = S.update;
   const when = u.date ? new Date(u.date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
@@ -305,7 +312,16 @@ ${gifSection()}
 
 <section class="card"><h2>Claude</h2><p class="muted">Uso da sua assinatura (não é chave de API). O acesso fica guardado só no celular, serve apenas para ler o uso e é renovado sozinho.</p>${claudeInfo()}</section>
 
-<section class="card"><h2>Brilho e descanso da tela</h2><p class="muted">Brilho, apagar e detecção de movimento são feitos pelo Fully Kiosk Browser; em outro navegador só o pixel shift e a rotação valem.</p>
+<section class="card"><h2>Brilho e descanso da tela</h2>
+<div class="grid">
+<label>Navegador do painel no celular<select data-path="display.browser">
+<option value="chrome" ${S.config.display.browser === 'chrome' ? 'selected' : ''}>Chrome (app na tela inicial)</option>
+<option value="fully" ${S.config.display.browser === 'fully' ? 'selected' : ''}>Fully Kiosk Browser</option>
+</select></label>
+</div>
+<p class="muted" style="margin:8px 0 12px">${S.config.display.browser === 'fully'
+    ? 'Fully: brilho, apagar a tela e detecção de movimento pela interface JavaScript dele (ligue em Advanced Web Settings). A tela ociosa usa a detecção de movimento.'
+    : `Chrome: o brilho é ajustado pelo Termux e, no horário de apagar, o painel fica preto (no AMOLED, pixel preto fica desligado). Sem detecção de movimento, não há tela ociosa. ${displayInfo()}`}</p>
 <div class="grid">
 ${field('brightness.day', 'Brilho de dia (%)', 'number', 'min="1" max="100"')}
 ${field('brightness.night', 'Brilho à noite (%)', 'number', 'min="1" max="100"')}
@@ -314,9 +330,9 @@ ${field('night.end', 'Noite termina', 'time')}
 ${field('sleep.enabled', 'Apagar a tela em horário fixo', 'checkbox')}
 ${field('sleep.start', 'Apagar às', 'time')}
 ${field('sleep.end', 'Acender às', 'time')}
-${field('idle.enabled', 'Tela ociosa sem movimento', 'checkbox')}
+${S.config.display.browser === 'fully' ? `${field('idle.enabled', 'Tela ociosa sem movimento', 'checkbox')}
 ${field('idle.afterMin', 'Ociosa após (min sem movimento)', 'number', 'min="1" max="720"')}
-${field('idle.offAfterMin', 'Apagar após mais (min; 0 = nunca)', 'number', 'min="0" max="720"')}
+${field('idle.offAfterMin', 'Apagar após mais (min; 0 = nunca)', 'number', 'min="0" max="720"')}` : ''}
 ${field('pixelShift.intervalSec', 'Pixel shift a cada (s)', 'number', 'min="10" max="3600"')}
 ${field('pixelShift.maxPx', 'Deslocamento máximo (px)', 'number', 'min="0" max="8"')}
 </div></section>
@@ -363,7 +379,7 @@ function wire() {
   app.querySelectorAll('[data-path]').forEach((el) => el.addEventListener('change', () => {
     const p = el.dataset.path;
     set(p, el.type === 'checkbox' ? el.checked : el.type === 'number' ? Number(el.value) : el.value);
-    if (p === 'tela1.clockExtra') render();
+    if (p === 'tela1.clockExtra' || p === 'display.browser') render();
   }));
   app.querySelectorAll('[data-screen]').forEach((el) => el.addEventListener('change', () => {
     S.config.screens[Number(el.dataset.screen)].enabled = el.checked;

@@ -199,3 +199,13 @@ test('calendário: Páscoa e feriados nacionais calculados no aparelho', async (
   assert.equal(nextHoliday(new Date(2026, 11, 31, 9).getTime()).name, 'Confraternização Universal'); // vira o ano
   assert.equal(nextHoliday(new Date(2026, 8, 7, 23, 58).getTime()).days, 0);
 });
+
+test('brilho pelo Termux: dia, noite e horário de apagar', async () => {
+  const { target } = await import('../server/display.js');
+  const cfg = { brightness: { day: 35, night: 8 }, night: { start: '22:00', end: '07:00' }, sleep: { enabled: true, start: '00:30', end: '06:30' } };
+  const at = (h, m) => new Date(2026, 10, 25, h, m).getTime();
+  assert.equal(target(at(14, 0), cfg), Math.round(0.35 * 255));
+  assert.equal(target(at(23, 0), cfg), Math.round(0.08 * 255));
+  assert.equal(target(at(3, 0), cfg), 0);
+  assert.equal(target(at(3, 0), { ...cfg, sleep: { ...cfg.sleep, enabled: false } }), Math.round(0.08 * 255));
+});
