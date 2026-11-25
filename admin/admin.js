@@ -167,7 +167,6 @@ ${items.map((i) => `<option value="${esc(i.file)}" ${value === i.file || (value 
 function gifSection() {
   const items = S.config.gif.items;
   const spots = gifSpots();
-  const full = S.config.screens.find((x) => x.id === 'gif');
   return `
 <section class="card"><h2>GIFs</h2>
 <p class="muted">Sua coleção de GIFs, salva no celular. Escolha onde aparecem em "Onde mostrar", abaixo. Aceita GIF, PNG, JPG ou WEBP, até 20 MB cada.</p>
@@ -183,7 +182,10 @@ function gifSection() {
 <div class="grid">
 ${gifPlaceSelect('gifClock', 'Ao lado do relógio (no lugar do calendário)', spots.clock)}
 ${gifPlaceSelect('gifClaude', 'Ao lado do gráfico do Claude (direita)', spots.claude)}
-<label class="check"><input type="checkbox" id="gifFull" ${full?.enabled ? 'checked' : ''} ${items.length ? '' : 'disabled'}>Também como tela cheia na rotação</label>
+<label>Tela cheia (liga e desliga em Telas, acima)<select id="gifFullPick" ${items.length ? '' : 'disabled'}>
+${items.length > 1 ? `<option value="*" ${S.config.gif.full === '*' ? 'selected' : ''}>Alternar entre todos</option>` : ''}
+${items.map((i) => `<option value="${esc(i.file)}" ${S.config.gif.full === i.file || (items.length === 1) ? 'selected' : ''}>${esc(i.name)}</option>`).join('')}
+</select></label>
 <label>Ajuste na tela cheia<select data-path="gif.fit">
 <option value="contain" ${S.config.gif.fit === 'contain' ? 'selected' : ''}>Caber inteiro (faixas pretas)</option>
 <option value="cover" ${S.config.gif.fit === 'cover' ? 'selected' : ''}>Preencher a tela (corta as bordas)</option>
@@ -376,7 +378,7 @@ function wire() {
   const markDirty = () => { dirty = true; render(); };
   document.getElementById('gifClock').addEventListener('change', (e) => { setClockGif(e.target.value); markDirty(); });
   document.getElementById('gifClaude').addEventListener('change', (e) => { S.config.claudeView.gif = e.target.value; markDirty(); });
-  document.getElementById('gifFull').addEventListener('change', (e) => { S.config.screens.find((x) => x.id === 'gif').enabled = e.target.checked; markDirty(); });
+  document.getElementById('gifFullPick').addEventListener('change', (e) => { S.config.gif.full = e.target.value; markDirty(); });
   app.querySelectorAll('[data-delmedia]').forEach((el) => el.addEventListener('click', guard(async () => {
     if (!confirm('Apagar este GIF do celular?')) return;
     const r = await call('DELETE', `/api/admin/media/${el.dataset.delmedia}`);

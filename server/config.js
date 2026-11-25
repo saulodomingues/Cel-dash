@@ -20,7 +20,7 @@ export const DEFAULTS = {
     { id: 'tela3', enabled: true },
     { id: 'gif', enabled: false }, // tela cheia de GIF: desligada por padrão; só entra na rotação se houver imagem
   ],
-  gif: { items: [], fit: 'contain' }, // items: [{ file, name }] em data/media
+  gif: { items: [], fit: 'contain', full: '*' }, // items: [{ file, name }] em data/media; full: GIF da tela cheia ('*' = alterna)
   tela1: { clockExtra: 'calendar', clockGif: '*' }, // clockExtra: 'calendar' | 'gif' | 'none'; clockGif: arquivo em data/media ou '*' = alterna entre todos
   // contadores do Claude nas telas 1 e 2: quais e em que ordem; estatística de 7 dias na tela 1
   claudeView: {
@@ -91,6 +91,7 @@ function sanitize(c) {
   if (c.claudeView.gif !== '*' && !c.gif.items.some((i) => i.file === c.claudeView.gif)) c.claudeView.gif = '';
   c.gif.fit = c.gif.fit === 'cover' ? 'cover' : 'contain';
   c.gif.items = c.gif.items.filter((i) => i && /^[a-f0-9]{16}\.(gif|png|jpg|webp)$/.test(i.file)).map((i) => ({ file: i.file, name: String(i.name || i.file).slice(0, 80) }));
+  if (c.gif.full !== '*' && !c.gif.items.some((i) => i.file === c.gif.full)) c.gif.full = '*';
   c.tela1.clockExtra = ['calendar', 'gif', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
   if (c.tela1.clockGif !== '*' && !c.gif.items.some((i) => i.file === c.tela1.clockGif)) c.tela1.clockGif = '*';
   c.port = clamp(Math.round(c.port), 1024, 65535);
