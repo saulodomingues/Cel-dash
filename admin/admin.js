@@ -193,7 +193,7 @@ ${gifPlaceSelect('gifClaude', 'Ao lado do gráfico do Claude (direita)', spots.c
 </section>`;
 }
 
-const COUNTER_NAMES = { session: ['Sessão de 5 h', 'some sozinho em plano sem esse limite'], model: ['Semana do modelo', 'Fable, ou o escolhido em Claude'], week: ['Semana, todos os modelos', ''] };
+const COUNTER_NAMES = { session: ['Sessão de 5 h', 'some sozinho em plano sem esse limite'], model: ['Semana do modelo', 'Fable, ou o escolhido em Claude'], week: ['Semana, todos modelos', ''] };
 function counterList() {
   const list = S.config.claudeView.counters;
   return list.map((c, i) => {

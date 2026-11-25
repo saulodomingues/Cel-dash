@@ -23,7 +23,7 @@ ${dash > 0.5 ? `<circle cx="42" cy="42" r="36" fill="none" stroke="${color}" str
     return `
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; text-align: center">
 ${arc(66)}
-<div style="font-size: 12px; color: #E8EAED; font-weight: 500; white-space: nowrap">${esc(title === 'Semana' ? sub === 'todos os modelos' ? 'Semana' : sub : title)}</div>
+<div style="font-size: 12px; color: #E8EAED; font-weight: 500; white-space: nowrap">${esc(title === 'Semana' ? sub === 'Todos modelos' ? 'Semana' : sub : title)}</div>
 <div style="font-size: 10.5px; color: #9AA0A6; white-space: nowrap">${note}</div>
 </div>`;
   }
@@ -64,7 +64,7 @@ ${cols}
 const COUNTERS = {
   session: (d) => ({ win: d?.session, base: AMBER, title: 'Sessão', sub: '5 horas', line: 'Sessão', windowMs: SESSION_MS }),
   model: (d) => ({ win: d?.model, base: LILAC, title: 'Semana', sub: d?.model?.label || 'Fable', line: d?.model?.label || 'Fable', windowMs: WEEK_MS }),
-  week: (d) => ({ win: d?.week, base: BLUE, title: 'Semana', sub: 'todos os modelos', line: 'Semana', windowMs: WEEK_MS }),
+  week: (d) => ({ win: d?.week, base: BLUE, title: 'Semana', sub: 'Todos modelos', line: 'Semana', windowMs: WEEK_MS }),
 };
 const DEFAULT_VIEW = { counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }], showStats: true, hideUnlimited: true };
 
