@@ -40,13 +40,15 @@ export function saveTicker(root) {
 }
 
 // Ajusta a duração para a velocidade ficar constante, seja qual for o tamanho do texto,
-// e retoma do ponto onde parou.
+// e retoma do ponto onde parou. Roda depois de TODO redesenho da tela: mesmo reaproveitado
+// (data-keep), o elemento sai e volta para a página, e o navegador reinicia a animação CSS
+// do zero; por isso o atraso é reaplicado sempre, com o progresso guardado logo antes.
 export function mountTicker(root) {
   const bar = root.querySelector('[data-keep^="ticker-"]');
   const track = bar?.querySelector('[data-ticker-track]');
-  if (!track || track.dataset.ready) return;
-  track.dataset.ready = '1';
-  const dur = Math.max(10, (track.scrollWidth + track.parentElement.clientWidth) / Number(bar.dataset.speed || 70));
+  if (!track) return;
+  if (!track.dataset.dur) track.dataset.dur = String(Math.max(10, (track.scrollWidth + track.parentElement.clientWidth) / Number(bar.dataset.speed || 70)));
+  const dur = Number(track.dataset.dur);
   track.style.animationDuration = `${dur}s`;
-  if (saved.frac > 0) track.style.animationDelay = `-${(saved.frac * dur).toFixed(2)}s`;
+  track.style.animationDelay = `-${(saved.frac * dur).toFixed(2)}s`;
 }
