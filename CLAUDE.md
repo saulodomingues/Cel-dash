@@ -89,6 +89,10 @@ Todos os números dos mocks são de exemplo.
 - Fontes: Space Grotesk para números, Inter para o resto. Os mocks carregam do Google Fonts; no aparelho, sirva as fontes localmente para funcionar sem internet.
 - Margem externa de 12 px na tela 1: é a folga do pixel shift.
 
+## Contadores do Claude
+
+`config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, nas telas 1 (anéis) e 2 (linha); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 o card tem 4 espaços: cada anel ocupa 1 e a estatística fica com 0,8 + o espaço dos anéis que saíram; sempre 7 dias, barras mais largas. O card nunca fica vazio.
+
 ## Calendário ao lado do relógio (tela 1)
 
 Escolhido em 25/11/2026 para o espaço livre do card do relógio. `widgets/calendar/`: mês com hoje marcado, feriados nacionais em vermelho e pontos facultativos (Carnaval, Corpus Christi) em lilás, e a linha "próximo feriado". Feriados calculados no aparelho (Páscoa por Meeus), sem internet. Com ele o relógio cai de 84 para 64 px. Liga/desliga em `/admin` → Telas (`tela1.clockExtra`). Módulos de widget que o navegador precisa além do `view.js` se chamam `*.shared.js`.

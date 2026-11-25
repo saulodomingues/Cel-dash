@@ -20,6 +20,12 @@ export const DEFAULTS = {
     { id: 'tela3', enabled: true },
   ],
   tela1: { clockExtra: 'calendar' }, // 'calendar' | 'none'
+  // contadores do Claude nas telas 1 e 2: quais e em que ordem; estatística de 7 dias na tela 1
+  claudeView: {
+    counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }],
+    showStats: true,
+    hideUnlimited: true,
+  },
   rotation: { intervalSec: 180, tapNext: true },
   pixelShift: { intervalSec: 60, maxPx: 4 },
   brightness: { day: 35, night: 8 },
@@ -74,6 +80,11 @@ function sanitize(c) {
   }
   for (const id of known) if (!seen.has(id)) screens.push({ id, enabled: true });
   c.screens = screens;
+  const ids = ['session', 'model', 'week'], got = [];
+  for (const x of c.claudeView.counters) if (x && ids.includes(x.id) && !got.some((g) => g.id === x.id)) got.push({ id: x.id, enabled: x.enabled !== false });
+  for (const id of ids) if (!got.some((g) => g.id === id)) got.push({ id, enabled: true });
+  if (!got.some((g) => g.enabled) && !c.claudeView.showStats) c.claudeView.showStats = true; // card nunca vazio
+  c.claudeView.counters = got;
   c.tela1.clockExtra = ['calendar', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
   c.port = clamp(Math.round(c.port), 1024, 65535);
   c.city.lat = clamp(c.city.lat, -90, 90);

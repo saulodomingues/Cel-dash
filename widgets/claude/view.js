@@ -6,7 +6,7 @@ const AMBER = '#F5A524', LILAC = '#C58AF9', BLUE = '#8AB4F8';
 const C = 226.2; // circunferência do anel (r = 36)
 const clampPct = (v) => Math.max(0, Math.min(100, v));
 
-function ring(win, base, title, sub, now, windowMs) {
+function ring(win, base, title, sub, now, windowMs, center = false) {
   const has = win && typeof win.pct === 'number';
   const mood = usageMood(win, base, windowMs, now);
   const color = mood.color;
@@ -14,7 +14,7 @@ function ring(win, base, title, sub, now, windowMs) {
     : mood.note ? `<span style="color: ${color}">${esc(mood.note)}</span>` : resetText(win.resetsAt, now);
   const dash = has ? (clampPct(win.pct) / 100) * C : 0;
   return `
-<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<div style="display: flex; align-items: center; justify-content: ${center ? 'center' : 'flex-start'}; gap: 8px; min-width: 0">
 <svg role="img" aria-label="${esc(title)} ${esc(sub)}: ${has ? pct(win.pct) : 'sem dados'}" width="78" height="78" viewBox="0 0 84 84" style="flex: none">
 <circle cx="42" cy="42" r="36" fill="none" stroke="#1C1E22" stroke-width="7"/>
 ${dash > 0.5 ? `<circle cx="42" cy="42" r="36" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C}" transform="rotate(-90 42 42)"/>` : ''}
@@ -46,22 +46,39 @@ ${cols}
 </div>`;
 }
 
+// Contadores escolhidos no /admin (ordem e quais), sem os que o plano não tem (ex.: sessão no Ultra).
+const COUNTERS = {
+  session: (d) => ({ win: d?.session, base: AMBER, title: 'Sessão', sub: '5 horas', line: 'Sessão', windowMs: SESSION_MS }),
+  model: (d) => ({ win: d?.model, base: LILAC, title: 'Semana', sub: d?.model?.label || 'Fable', line: d?.model?.label || 'Fable', windowMs: WEEK_MS }),
+  week: (d) => ({ win: d?.week, base: BLUE, title: 'Semana', sub: 'todos os modelos', line: 'Semana', windowMs: WEEK_MS }),
+};
+const DEFAULT_VIEW = { counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }], showStats: true, hideUnlimited: true };
+
+export function pickCounters(d, view = DEFAULT_VIEW) {
+  return (view.counters || DEFAULT_VIEW.counters)
+    .filter((c) => c.enabled && COUNTERS[c.id])
+    .map((c) => COUNTERS[c.id](d))
+    .filter((c) => !(view.hideUnlimited && c.win?.unlimited));
+}
+
 // Tela 1: card inteiro.
-export function claudeCard(w, now, planLabel) {
+export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW) {
   const head = `<div style="display: flex; justify-content: space-between; ${LABEL}"><span>Claude${planLabel ? ` · ${esc(planLabel)}` : ''}</span><span>${ago(w, now)}</span></div>`;
   const d = w?.data;
   if (!d) return head + noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'sem dados');
+  const rings = pickCounters(d, view);
+  const stats = view.showStats !== false || rings.length === 0; // o card nunca fica vazio
+  // 4 espaços: cada anel ocupa 1; a estatística fica com 0,8 mais o espaço de cada anel que saiu
+  const cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : [])].join(' ');
   return `${head}
-<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr); gap: 14px; flex: 1; min-height: 0">
-${ring(d.session, AMBER, 'Sessão', '5 horas', now, SESSION_MS)}
-${ring(d.model, LILAC, 'Semana', d.model?.label || 'Fable', now, WEEK_MS)}
-${ring(d.week, BLUE, 'Semana', 'todos os modelos', now, WEEK_MS)}
-${bars7(d.days)}
+<div style="display: grid; grid-template-columns: ${cols}; gap: 14px; flex: 1; min-height: 0">
+${rings.map((c) => ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats)).join('\n')}
+${stats ? bars7(d.days) : ''}
 </div>`;
 }
 
 // Tela 2: três medidores numa linha fina.
-export function claudeLine(w, now = Date.now()) {
+export function claudeLine(w, now = Date.now(), view = DEFAULT_VIEW) {
   const d = w?.data;
   const item = (label, win, base, windowMs) => {
     const v = win && typeof win.pct === 'number' ? win.pct : null;
@@ -75,9 +92,7 @@ export function claudeLine(w, now = Date.now()) {
   return `
 <div style="${LABEL}">Claude${d ? '' : ' · sem dados'}</div>
 <div style="display: flex; gap: 16px">
-${item('Sessão', d?.session, AMBER, SESSION_MS)}
-${item(d?.model?.label || 'Fable', d?.model, LILAC, WEEK_MS)}
-${item('Semana', d?.week, BLUE, WEEK_MS)}
+${(pickCounters(d, view).length ? pickCounters(d, view) : pickCounters(d, { ...view, hideUnlimited: false })).map((c) => item(c.line, c.win, c.base, c.windowMs)).join('\n')}
 </div>`;
 }
 

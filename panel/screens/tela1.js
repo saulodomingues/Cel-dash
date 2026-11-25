@@ -14,6 +14,6 @@ export function tela1({ data, config, now }) {
 <div style="width: 780px; height: 360px; box-sizing: border-box; padding: 12px; background: #000000; color: #E8EAED; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px">
 <section style="grid-column: span 2; ${CARD}; background: ${clk.bg}; border-color: ${clk.border}; justify-content: space-between">${clockCard(now, config.city.name, data.system, clk.digits, config.tela1?.clockExtra === 'calendar' ? miniCalendar(now, clk.digits) : '')}</section>
 <section style="grid-column: span 2; ${CARD}; background: ${sky.bg}; border-color: ${sky.border}; gap: 6px">${weatherCard(data.weather, now, sky.chip)}</section>
-<section style="grid-column: span 4; ${CARD}; gap: 10px">${claudeCard(data.claude, now, config.claude.planLabel)}</section>
+<section style="grid-column: span 4; ${CARD}; gap: 10px">${claudeCard(data.claude, now, config.claude.planLabel, config.claudeView)}</section>
 </div>`;
 }

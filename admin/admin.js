@@ -92,6 +92,19 @@ function screensList() {
   }).join('');
 }
 
+const COUNTER_NAMES = { session: ['Sessão de 5 h', 'some sozinho em plano sem esse limite'], model: ['Semana do modelo', 'Fable, ou o escolhido em Claude'], week: ['Semana, todos os modelos', ''] };
+function counterList() {
+  const list = S.config.claudeView.counters;
+  return list.map((c, i) => {
+    const [name, desc] = COUNTER_NAMES[c.id];
+    return `
+<div class="screen ${c.enabled ? '' : 'off'}" style="padding:8px 12px">
+<div class="info"><label class="check" style="min-height:32px"><input type="checkbox" data-counter="${i}" ${c.enabled ? 'checked' : ''}>${esc(name)}</label>${desc ? `<div class="muted">${esc(desc)}</div>` : ''}</div>
+<div class="moves"><button data-cmove="${i}:-1" aria-label="Subir ${esc(name)}" ${i === 0 ? 'disabled' : ''}>↑</button><button data-cmove="${i}:1" aria-label="Descer ${esc(name)}" ${i === list.length - 1 ? 'disabled' : ''}>↓</button></div>
+</div>`;
+  }).join('');
+}
+
 function claudeInfo() {
   const d = S.status.claude?.data;
   const st = S.status.claude || {};
@@ -160,6 +173,15 @@ function render() {
 <div class="grid" style="margin-top:12px">
 ${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20" max="3600"')}
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
+</div>
+<h2 style="margin-top:16px">Contadores do Claude</h2>
+<p class="muted">Quais aparecem e em que ordem, na tela principal (anéis) e na tela 2 (linha). Cada anel que sai dá o espaço para a estatística.</p>
+<div class="screens">${counterList()}</div>
+<div class="grid" style="margin-top:8px">
+${field('claudeView.showStats', 'Mostrar últimos 7 dias (tela principal)', 'checkbox')}
+${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'checkbox')}
+</div>
+<div class="grid" style="margin-top:12px">
 <label>Ao lado do relógio (tela principal)<select data-path="tela1.clockExtra">
 <option value="calendar" ${S.config.tela1.clockExtra === 'calendar' ? 'selected' : ''}>Calendário do mês com feriados</option>
 <option value="none" ${S.config.tela1.clockExtra === 'none' ? 'selected' : ''}>Nada (relógio grande)</option>
@@ -238,6 +260,15 @@ function wire() {
   app.querySelectorAll('[data-screen]').forEach((el) => el.addEventListener('change', () => {
     S.config.screens[Number(el.dataset.screen)].enabled = el.checked;
     if (!S.config.screens.some((s) => s.enabled)) { S.config.screens[Number(el.dataset.screen)].enabled = true; toast('Pelo menos uma tela precisa ficar ativa.'); }
+    dirty = true; render();
+  }));
+  app.querySelectorAll('[data-counter]').forEach((el) => el.addEventListener('change', () => {
+    S.config.claudeView.counters[Number(el.dataset.counter)].enabled = el.checked;
+    dirty = true; render();
+  }));
+  app.querySelectorAll('[data-cmove]').forEach((el) => el.addEventListener('click', () => {
+    const [i, d] = el.dataset.cmove.split(':').map(Number);
+    const a = S.config.claudeView.counters; [a[i], a[i + d]] = [a[i + d], a[i]];
     dirty = true; render();
   }));
   app.querySelectorAll('[data-move]').forEach((el) => el.addEventListener('click', () => {
