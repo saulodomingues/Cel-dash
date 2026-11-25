@@ -167,7 +167,7 @@ export function todayBlock(w) {
   ].filter(Boolean).join(' · ');
   const item = (label, value, bar, color, sub) => `
 <div style="min-width: 0">
-<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 10.5px; color: #9AA0A6">${label}</span><span style="${SG}; font-size: 18px; color: #C4C7CC">${value}</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 12.5px; color: #9AA0A6">${label}</span><span style="${SG}; font-size: 18px; color: #C4C7CC">${value}</span></div>
 <div style="height: 3px; border-radius: 2px; background: #1C1E22; margin-top: 2px"><div style="width: ${bar === null ? 0 : Math.max(0, Math.min(100, bar))}%; height: 3px; border-radius: 2px; background: ${color}"></div></div>
 <div style="font-size: 9.5px; color: #6B7078; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${sub || '&nbsp;'}</div>
 </div>`;
