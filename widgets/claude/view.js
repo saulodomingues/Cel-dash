@@ -39,13 +39,14 @@ ${arc(size)}
 </div>`;
 }
 
-// Uso diário dos últimos 7 dias em barras deitadas: um dia por linha, hoje por último em âmbar.
+// Uso diário dos últimos 7 dias em barras deitadas: um dia por linha, hoje primeiro (em âmbar) e depois os anteriores.
 // O valor é quanto do limite semanal foi gasto naquele dia.
 function barsH(days) {
   const max = Math.max(...days.map((d) => d.value), 0);
   const val = (v) => (v > 0 && v < 1 ? '<1%' : `${Math.round(v)}%`);
-  const rows = days.map((d, i) => {
-    const today = i === days.length - 1;
+  // hoje primeiro, depois os dias anteriores (do mais recente ao mais antigo)
+  const rows = [...days].reverse().map((d, i) => {
+    const today = i === 0;
     const w = max > 0 && d.value > 0 ? Math.max(3, (d.value / max) * 100) : 0;
     return `<span style="font-size: 10.5px; color: ${today ? '#E8EAED' : '#9AA0A6'}; text-align: right">${today ? 'hoje' : WD[new Date(d.t).getDay()]}</span>
 <div style="height: 7px; border-radius: 3px; background: #1C1E22; overflow: hidden"><div style="width: ${w.toFixed(0)}%; height: 100%; border-radius: 3px; background: ${today ? AMBER : '#3A3D44'}"></div></div>
