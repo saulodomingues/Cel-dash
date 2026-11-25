@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Painel de mesa S22</title>
+<link rel="stylesheet" href="/panel/fonts.css">
+<style>
+html, body { margin: 0; height: 100%; background: #000000; overflow: hidden; }
+body { font-family: Inter, system-ui, sans-serif; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; cursor: none; }
+#viewport { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000000; }
+#stage { width: 780px; height: 360px; flex: none; transform-origin: center; opacity: 0; transition: opacity 0.4s ease; font-family: Inter, system-ui, sans-serif; }
+#blackout { position: fixed; inset: 0; background: #000000; display: none; z-index: 10; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<div id="blackout"></div>
+<script type="module" src="/panel/main.js"></script>
+</body>
+</html>

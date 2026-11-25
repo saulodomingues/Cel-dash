@@ -1,0 +1,119 @@
+// Uso do Claude: anéis e barras (tela 1), linha fina (tela 2), curva da sessão (tela 3).
+import { esc, hm, pct, ago, resetText, noData, WD, SG, LABEL } from '/panel/lib.js';
+
+const AMBER = '#F5A524', LILAC = '#C58AF9', BLUE = '#8AB4F8';
+const C = 226.2; // circunferência do anel (r = 36)
+const clampPct = (v) => Math.max(0, Math.min(100, v));
+
+function ring(win, color, title, sub, now) {
+  const has = win && typeof win.pct === 'number';
+  const dash = has ? (clampPct(win.pct) / 100) * C : 0;
+  return `
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<svg role="img" aria-label="${esc(title)} ${esc(sub)}: ${has ? pct(win.pct) : 'sem dados'}" width="78" height="78" viewBox="0 0 84 84" style="flex: none">
+<circle cx="42" cy="42" r="36" fill="none" stroke="#1C1E22" stroke-width="7"/>
+${dash > 0.5 ? `<circle cx="42" cy="42" r="36" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C}" transform="rotate(-90 42 42)"/>` : ''}
+<text x="42" y="49" text-anchor="middle" fill="${has ? '#E8EAED' : '#9AA0A6'}" font-family="'Space Grotesk', sans-serif" font-size="21" font-weight="500">${has ? pct(win.pct) : '—'}</text>
+</svg>
+<div style="min-width: 0">
+<div style="font-size: 13px; color: #E8EAED; font-weight: 500">${esc(title)}</div>
+<div style="font-size: 11px; color: #C4C7CC; white-space: nowrap">${esc(sub)}</div>
+<div style="font-size: 11px; color: #9AA0A6; margin-top: 6px; white-space: nowrap">${has ? resetText(win.resetsAt, now) : 'sem dados'}</div>
+</div>
+</div>`;
+}
+
+function bars7(days) {
+  const max = Math.max(...days.map((d) => d.value), 0);
+  const cols = days.map((d, i) => {
+    const today = i === days.length - 1;
+    const h = max > 0 ? Math.max(4, (d.value / max) * 100) : 4;
+    return `<div style="height: ${h.toFixed(0)}%; background: ${today ? AMBER : '#2A2D33'}; border-radius: 3px"></div>`;
+  }).join('\n');
+  const letters = days.map((d, i) => `<span${i === days.length - 1 ? ' style="color: #E8EAED"' : ''}>${WD[new Date(d.t).getDay()][0]}</span>`).join('');
+  return `
+<div style="display: flex; flex-direction: column; justify-content: space-between">
+<div style="font-size: 12px; color: #C4C7CC">Últimos 7 dias</div>
+<div role="img" aria-label="Uso diário nos últimos sete dias" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; align-items: end; height: 58px">
+${cols}
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; font-size: 11px; color: #9AA0A6; text-align: center">${letters}</div>
+</div>`;
+}
+
+// Tela 1: card inteiro.
+export function claudeCard(w, now, planLabel) {
+  const head = `<div style="display: flex; justify-content: space-between; ${LABEL}"><span>Claude${planLabel ? ` · ${esc(planLabel)}` : ''}</span><span>${ago(w, now)}</span></div>`;
+  const d = w?.data;
+  if (!d) return head + noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'sem dados');
+  return `${head}
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr); gap: 14px; flex: 1; min-height: 0">
+${ring(d.session, AMBER, 'Sessão', '5 horas', now)}
+${ring(d.model, LILAC, 'Semana', d.model?.label || 'Fable', now)}
+${ring(d.week, BLUE, 'Semana', 'todos os modelos', now)}
+${bars7(d.days)}
+</div>`;
+}
+
+// Tela 2: três medidores numa linha fina.
+export function claudeLine(w) {
+  const d = w?.data;
+  const item = (label, win, color) => {
+    const v = win && typeof win.pct === 'number' ? win.pct : null;
+    return `
+<div style="flex: 1; min-width: 0">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 11px; color: #9AA0A6">${esc(label)}</span><span style="${SG}; font-size: 20px; font-weight: 500; color: #C4C7CC">${v === null ? '—' : pct(v)}</span></div>
+<div style="height: 3px; border-radius: 2px; background: #1C1E22; margin-top: 4px"><div style="width: ${v === null ? 0 : clampPct(v)}%; height: 3px; border-radius: 2px; background: ${color}"></div></div>
+</div>`;
+  };
+  return `
+<div style="${LABEL}">Claude${d ? '' : ' · sem dados'}</div>
+<div style="display: flex; gap: 16px">
+${item('Sessão', d?.session, AMBER)}
+${item(d?.model?.label || 'Fable', d?.model, LILAC)}
+${item('Semana', d?.week, BLUE)}
+</div>`;
+}
+
+// Tela 3: uso acumulado na sessão de 5 h, com projeção tracejada até a renovação.
+export function sessionChart(w, now) {
+  const X0 = 40, X1 = 490, Y0 = 160, Y100 = 30;
+  const y = (p) => Y0 - (clampPct(p) / 100) * (Y0 - Y100);
+  const grid = `<path d="M${X0} ${Y0}.0 H${X1}" stroke="#1C1E22" stroke-width="1"/><text x="32" y="164.0" text-anchor="end" fill="#9AA0A6" font-family="Inter, sans-serif" font-size="11">0</text><path d="M${X0} 95.0 H${X1}" stroke="#1C1E22" stroke-width="1"/><text x="32" y="99.0" text-anchor="end" fill="#9AA0A6" font-family="Inter, sans-serif" font-size="11">50</text><path d="M${X0} ${Y100}.0 H${X1}" stroke="#1C1E22" stroke-width="1" stroke-dasharray="4 5"/><text x="32" y="34.0" text-anchor="end" fill="#9AA0A6" font-family="Inter, sans-serif" font-size="11">100</text>`;
+  const s = w?.data?.session;
+  const title = 'Claude · sessão de 5 h, uso acumulado (%)';
+  const frame = (right, body) => `
+<div style="display: flex; justify-content: space-between; ${LABEL}"><span>${title}</span><span>${right}</span></div>
+<svg role="img" aria-label="Uso acumulado da sessão de 5 horas" width="506" height="188" viewBox="0 0 506 188">
+${grid}
+${body}
+</svg>`;
+  const center = (msg) => `<text x="265" y="120" text-anchor="middle" fill="#9AA0A6" font-family="Inter, sans-serif" font-size="12">${msg}</text>`;
+  if (!s) return frame('sem dados', center('sem dados'));
+  if (!s.resetsAt || s.resetsAt <= now) return frame(`${pct(s.pct)} agora`, center('nenhuma sessão em andamento'));
+
+  const end = s.resetsAt, start = end - 5 * 3600_000;
+  const x = (t) => X0 + ((Math.max(start, Math.min(end, t)) - start) / (end - start)) * (X1 - X0);
+  // a curva começa em 0 no início da sessão e termina na leitura atual
+  const pts = [{ t: start, pct: 0 }, ...(w.data.curve || []).filter((p) => p.t > start && p.t < now), { t: Math.min(now, end), pct: s.pct }];
+  const path = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)} ${y(p.pct).toFixed(1)}`).join(' ');
+  const nx = x(now), ny = y(s.pct);
+
+  // projeção linear pelo ritmo médio da sessão
+  const elapsed = Math.max(1, now - start);
+  const proj = (s.pct * (end - start)) / elapsed;
+  let px = X1, py = y(proj), right = `no ritmo atual: ${pct(proj)} ao renovar`;
+  if (proj > 100 && s.pct < 100) {
+    const tFull = start + (elapsed * 100) / s.pct;
+    px = x(tFull); py = Y100; right = `no ritmo atual: 100% às ${hm(tFull)}`;
+  } else if (s.pct >= 100) { right = 'limite da sessão atingido'; px = nx; py = ny; }
+  const anchorEnd = nx > 110;
+  const hours = [0, 1, 2, 3, 4, 5].map((i) => `<text x="${(X0 + i * 90).toFixed(1)}" y="180" text-anchor="middle" fill="#9AA0A6" font-family="Inter, sans-serif" font-size="11">${hm(start + i * 3600_000)}</text>`).join('');
+  return frame(right, `
+<path d="${path} L${nx.toFixed(1)} ${Y0} L${X0}.0 ${Y0} Z" fill="${AMBER}" fill-opacity="0.08"/>
+<path d="${path}" fill="none" stroke="${AMBER}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M${nx.toFixed(1)} ${ny.toFixed(1)} L${px.toFixed(1)} ${py.toFixed(1)}" fill="none" stroke="${AMBER}" stroke-width="1.5" stroke-dasharray="3 5" stroke-linecap="round"/>
+<circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="4" fill="#000000" stroke="${AMBER}" stroke-width="2"/>
+<text x="${(anchorEnd ? nx - 10 : nx + 10).toFixed(1)}" y="${Math.max(16, ny - 8).toFixed(1)}" text-anchor="${anchorEnd ? 'end' : 'start'}" fill="#E8EAED" font-family="'Space Grotesk', sans-serif" font-size="14">${pct(s.pct)} agora</text>
+${hours}`);
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sonda da tela</title>
+<style>
+body { margin: 0; background: #000; color: #E8EAED; font: 15px/1.6 system-ui, sans-serif; padding: 16px; }
+b { color: #F5A524; font-weight: 500; }
+small { color: #9AA0A6; }
+</style>
+</head>
+<body>
+<div id="out"></div>
+<small>Abra esta página no Fully Kiosk, deitado e em tela cheia. O layout foi desenhado para 780×360 px CSS a 3x; outra medida só muda a escala, o painel se ajusta sozinho.</small>
+<script>
+function show() {
+  const f = typeof fully !== 'undefined';
+  document.getElementById('out').innerHTML =
+    `janela: <b>${innerWidth}×${innerHeight}</b> px CSS<br>` +
+    `devicePixelRatio: <b>${devicePixelRatio}</b><br>` +
+    `pixels físicos: <b>${Math.round(innerWidth * devicePixelRatio)}×${Math.round(innerHeight * devicePixelRatio)}</b><br>` +
+    `escala do painel: <b>${Math.min(innerWidth / 780, innerHeight / 360).toFixed(3)}</b><br>` +
+    `Fully Kiosk (interface JavaScript): <b>${f ? 'disponível' : 'não disponível'}</b><br>`;
+}
+show(); addEventListener('resize', show);
+</script>
+</body>
+</html>

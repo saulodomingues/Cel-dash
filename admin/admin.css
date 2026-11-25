@@ -1,0 +1,49 @@
+:root { --bg: #000000; --card: #0D0E10; --line: #1C1E22; --field: #14161A; --text: #E8EAED; --text2: #C4C7CC; --muted: #9AA0A6; --amber: #F5A524; --green: #4ADE80; --blue: #8AB4F8; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 Inter, system-ui, sans-serif; }
+main { max-width: 860px; margin: 0 auto; padding: 16px 16px 96px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+h1 { font: 500 20px 'Space Grotesk', sans-serif; margin: 0; }
+h2 { font: 500 15px 'Space Grotesk', sans-serif; margin: 0 0 4px; }
+p { margin: 0; }
+a { color: var(--blue); }
+.muted { color: var(--muted); font-size: 12px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.card > .muted { margin-bottom: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
+label.check { flex-direction: row; align-items: center; gap: 8px; color: var(--text2); font-size: 14px; min-height: 40px; }
+input, select, textarea, button { font: inherit; color: var(--text); }
+input[type=text], input[type=password], input[type=number], input[type=time], select, textarea {
+  background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%; min-width: 0; color-scheme: dark; }
+textarea { min-height: 84px; resize: vertical; font: 12px/1.4 ui-monospace, monospace; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--amber); }
+button { background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 9px 14px; cursor: pointer; min-height: 40px; }
+button:hover { border-color: #3A3D44; }
+button.primary { background: var(--amber); border-color: var(--amber); color: #000; font-weight: 600; }
+button:disabled { opacity: 0.5; cursor: default; }
+.row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.row > label { flex: 1 1 180px; }
+.screens { display: flex; flex-direction: column; gap: 8px; }
+.screen { display: flex; align-items: center; gap: 12px; background: var(--field); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.screen .thumb { width: 195px; height: 90px; flex: none; overflow: hidden; border-radius: 6px; border: 1px solid var(--line); background: #000; }
+.screen iframe { width: 780px; height: 360px; border: 0; transform: scale(0.25); transform-origin: 0 0; pointer-events: none; }
+.screen .info { flex: 1; min-width: 0; }
+.screen .info b { font-weight: 500; }
+.screen .moves { display: flex; gap: 6px; }
+.screen .moves button { padding: 6px 12px; }
+.off .thumb { opacity: 0.35; }
+.status { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 12px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.err { color: var(--amber); font-size: 12px; overflow-wrap: anywhere; }
+.results { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.results button { text-align: left; }
+.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(13, 14, 16, 0.96); border-top: 1px solid var(--line); padding: 10px 16px; display: flex; justify-content: center; gap: 12px; align-items: center; }
+#toast { position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 90vw; }
+#toast.show { opacity: 1; }
+.login { max-width: 360px; margin: 12vh auto 0; }
+.login form { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+code { background: var(--field); border-radius: 4px; padding: 1px 5px; font-size: 12px; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .screen { flex-wrap: wrap; } .screen .thumb { width: 100%; height: auto; aspect-ratio: 780 / 360; } .screen iframe { transform: scale(calc((100vw - 82px) / 780)); } }

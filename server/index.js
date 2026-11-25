@@ -1,0 +1,223 @@
+// Servidor do painel: HTTP puro, sem dependências. Roda no Termux do próprio S22.
+//   /        painel (Fully Kiosk no celular)
+//   /admin   configurações e telas (celular ou navegador do PC)
+//   /events  SSE: empurra dados e configuração para o painel na hora
+import http from 'node:http';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { ROOT, getConfig, setConfig, publicConfig, getSecrets, saveSecrets } from './config.js';
+import * as auth from './auth.js';
+import * as scheduler from './scheduler.js';
+
+const DEMO = process.env.DEMO === '1';
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8',
+};
+
+// ---------- SSE ----------
+const clients = new Set();
+function broadcast(event, data) {
+  const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const res of clients) res.write(msg);
+}
+setInterval(() => { for (const res of clients) res.write(': ping\n\n'); }, 25_000).unref();
+
+const fullState = () => ({ config: publicConfig(), data: scheduler.state, demo: DEMO, now: Date.now() });
+
+// ---------- utilidades HTTP ----------
+function send(res, code, body, headers = {}) {
+  const isJson = typeof body !== 'string' && !Buffer.isBuffer(body);
+  res.writeHead(code, {
+    'Content-Type': isJson ? MIME['.json'] : 'text/plain; charset=utf-8',
+    'Cache-Control': 'no-store', ...headers,
+  });
+  res.end(isJson ? JSON.stringify(body) : body);
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    if (!/^application\/json/.test(req.headers['content-type'] || '')) return reject(new Error('Envie JSON.'));
+    let size = 0; const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > 256 * 1024) { reject(new Error('Corpo grande demais.')); req.destroy(); } else chunks.push(c);
+    });
+    req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); } catch { reject(new Error('JSON inválido.')); } });
+    req.on('error', reject);
+  });
+}
+
+function serveFile(res, file) {
+  fs.readFile(file, (err, buf) => {
+    if (err) return send(res, 404, 'Não encontrado');
+    const ext = path.extname(file);
+    res.writeHead(200, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'Cache-Control': ext === '.woff2' ? 'public, max-age=31536000, immutable' : 'no-cache',
+    });
+    res.end(buf);
+  });
+}
+
+// Só estas pastas são públicas; dos widgets, só o view.js (o coletor fica no servidor).
+function staticPath(urlPath) {
+  const p = path.posix.normalize(decodeURIComponent(urlPath));
+  if (p.includes('..') || p.includes('\0')) return null;
+  if (p === '/') return 'panel/index.html';
+  if (p === '/admin' || p === '/admin/') return 'admin/index.html';
+  if (p === '/probe') return 'panel/probe.html';
+  if (/^\/(panel|admin)\/[\w./-]+$/.test(p)) return p.slice(1);
+  if (/^\/widgets\/[\w-]+\/view\.js$/.test(p)) return p.slice(1);
+  return null;
+}
+
+// ---------- status dos segredos (nunca os valores) ----------
+function secretsStatus() {
+  const s = getSecrets();
+  return {
+    claudeManual: Boolean(s.claude?.accessToken),
+    claudeManualHasRefresh: Boolean(s.claude?.refreshToken),
+    claudeManualExpiresAt: s.claude?.expiresAt || null,
+  };
+}
+
+function localIps() {
+  try {
+    return Object.values(os.networkInterfaces()).flat()
+      .filter((i) => i && i.family === 'IPv4' && !i.internal).map((i) => i.address);
+  } catch { return []; } // o Android 11+ pode negar essa leitura no Termux
+}
+
+// Aceita o conteúdo do .credentials.json do Claude Code ou só o access token.
+function parseClaudeCredentials(text) {
+  const t = String(text || '').trim();
+  if (!t) return null;
+  if (t.startsWith('{')) {
+    let j;
+    try { j = JSON.parse(t); } catch { throw new Error('O JSON colado não é válido.'); }
+    const o = j.claudeAiOauth || j;
+    if (!o.accessToken) throw new Error('Não achei "accessToken" no JSON colado.');
+    return { accessToken: String(o.accessToken), refreshToken: o.refreshToken ? String(o.refreshToken) : null, expiresAt: Number(o.expiresAt) || null };
+  }
+  if (/\s/.test(t)) throw new Error('O token não pode ter espaços.');
+  return { accessToken: t, refreshToken: null, expiresAt: null };
+}
+
+// ---------- rotas da API ----------
+async function api(req, res, url) {
+  const p = url.pathname;
+  const m = req.method;
+
+  if (p === '/api/state' && m === 'GET') return send(res, 200, fullState());
+
+  if (p === '/api/admin/session' && m === 'GET') {
+    return send(res, 200, { needsSetup: !auth.hasPassword(), logged: Boolean(auth.sessionFrom(req)) });
+  }
+  if (p === '/api/admin/setup' && m === 'POST') {
+    if (auth.hasPassword()) return send(res, 409, { error: 'A senha já foi criada.' });
+    const { password } = await readBody(req);
+    auth.setPassword(password);
+    return send(res, 200, { ok: true }, { 'Set-Cookie': auth.cookieFor(auth.createSession()) });
+  }
+  if (p === '/api/admin/login' && m === 'POST') {
+    const { password } = await readBody(req);
+    if (!auth.checkPassword(password)) return send(res, 401, { error: 'Senha incorreta.' });
+    return send(res, 200, { ok: true }, { 'Set-Cookie': auth.cookieFor(auth.createSession()) });
+  }
+
+  if (!p.startsWith('/api/admin/')) return send(res, 404, { error: 'Rota desconhecida.' });
+  const sid = auth.sessionFrom(req);
+  if (!sid) return send(res, 401, { error: 'Entre com a senha.' });
+
+  if (p === '/api/admin/logout' && m === 'POST') {
+    auth.dropSession(sid);
+    return send(res, 200, { ok: true }, { 'Set-Cookie': auth.clearCookie() });
+  }
+  if (p === '/api/admin/password' && m === 'POST') {
+    const { current, next } = await readBody(req);
+    if (!auth.checkPassword(current)) return send(res, 401, { error: 'Senha atual incorreta.' });
+    auth.setPassword(next);
+    auth.dropAllSessions();
+    return send(res, 200, { ok: true }, { 'Set-Cookie': auth.cookieFor(auth.createSession()) });
+  }
+  if (p === '/api/admin/config' && m === 'GET') {
+    return send(res, 200, {
+      config: getConfig(), secrets: secretsStatus(), status: scheduler.state, demo: DEMO,
+      server: { ips: localIps(), port: getConfig().port, uptimeSec: Math.round(process.uptime()), node: process.version },
+    });
+  }
+  if (p === '/api/admin/config' && m === 'PUT') {
+    const before = getConfig();
+    const after = setConfig(await readBody(req));
+    broadcast('config', publicConfig());
+    if (JSON.stringify(before.city) !== JSON.stringify(after.city)) scheduler.refresh('weather');
+    if (JSON.stringify(before.claude) !== JSON.stringify(after.claude)) scheduler.refresh('claude');
+    if (JSON.stringify(before.system) !== JSON.stringify(after.system)) scheduler.refresh('system');
+    return send(res, 200, { config: after, portChanged: before.port !== after.port });
+  }
+  if (p === '/api/admin/secrets/claude' && m === 'PUT') {
+    const { credentials } = await readBody(req);
+    const parsed = parseClaudeCredentials(credentials);
+    const s = { ...getSecrets() };
+    if (parsed) s.claude = parsed; else delete s.claude;
+    saveSecrets(s);
+    return send(res, 200, { secrets: secretsStatus() });
+  }
+  if (p.startsWith('/api/admin/collect/') && m === 'POST') {
+    const st = await scheduler.refresh(p.split('/').pop());
+    return send(res, 200, st);
+  }
+  if (p === '/api/admin/geocode' && m === 'GET') {
+    const q = (url.searchParams.get('q') || '').trim();
+    if (q.length < 2) return send(res, 400, { error: 'Digite ao menos 2 letras.' });
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=6&language=pt&format=json&name=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) return send(res, 502, { error: `Busca de cidades respondeu ${r.status}.` });
+    const j = await r.json();
+    return send(res, 200, { results: (j.results || []).map((c) => ({
+      name: c.name, region: [c.admin1, c.country].filter(Boolean).join(', '), lat: c.latitude, lon: c.longitude,
+    })) });
+  }
+  if (p === '/api/admin/reload-panel' && m === 'POST') {
+    broadcast('reload', {});
+    return send(res, 200, { ok: true });
+  }
+  return send(res, 404, { error: 'Rota desconhecida.' });
+}
+
+// ---------- servidor ----------
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, 'http://x');
+  try {
+    if (url.pathname === '/events') {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+      res.write(`retry: 3000\nevent: state\ndata: ${JSON.stringify(fullState())}\n\n`);
+      clients.add(res);
+      req.on('close', () => clients.delete(res));
+      return;
+    }
+    if (url.pathname.startsWith('/api/')) return await api(req, res, url);
+    if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Método não permitido');
+    const rel = staticPath(url.pathname);
+    if (!rel) return send(res, 404, 'Não encontrado');
+    serveFile(res, path.join(ROOT, rel));
+  } catch (e) {
+    if (!res.headersSent) send(res, 400, { error: String(e.message || e) });
+    else res.end();
+  }
+});
+
+await scheduler.loadCollectors();
+scheduler.start((id, st) => broadcast('data', { id, state: st }));
+
+const port = Number(process.env.PORT) || getConfig().port;
+server.listen(port, '0.0.0.0', () => {
+  const ips = localIps();
+  console.log(`Painel em http://localhost:${port}/  ·  admin em /admin${DEMO ? '  ·  MODO DEMO (dados de exemplo)' : ''}`);
+  for (const ip of ips) console.log(`  na rede: http://${ip}:${port}/admin`);
+});
+
+process.on('unhandledRejection', (e) => console.error('rejeição não tratada:', e));
+process.on('uncaughtException', (e) => console.error('exceção não tratada:', e));

@@ -1,0 +1,14 @@
+{
+  "name": "monitor-mesa-s22",
+  "version": "1.0.0",
+  "description": "Painel de mesa que roda inteiro num Galaxy S22 (Termux + Node)",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server/index.js",
+    "demo": "DEMO=1 node server/index.js",
+    "probe": "node probe/probe.js",
+    "test": "node --test test/unit.test.js"
+  }
+}
