@@ -235,3 +235,24 @@ test('cotações: leitura da AwesomeAPI e do Yahoo, e valores curtos', async () 
   assert.equal(fmtQuote(131200.5, 'index'), '131,2 mil');
   assert.equal(fmtQuote(0.0054, 'fx'), '0,0054');
 });
+
+test('alerta de chuva e qualidade do ar', async () => {
+  const { nowcast, nowcastText, aqiLevel } = await import('../widgets/weather/air.shared.js');
+  const { parseAir } = await import('../widgets/weather/collector.js');
+  const t0 = Date.UTC(2026, 10, 25, 18, 0), Q = 15 * 60_000;
+  const slots = (mm) => mm.map((v, i) => ({ t: t0 + i * Q, mm: v }));
+  const now = t0 + 5 * 60_000;
+  const a = nowcast(slots([0, 0, 0.4, 1.2, 0]), now);
+  assert.deepEqual(a, { kind: 'starts', at: t0 + 2 * Q });
+  assert.equal(nowcastText(a, now), 'chuva começa em ~25 min');
+  assert.equal(nowcastText(a, now, true), 'chuva em ~25 min');
+  const b = nowcast(slots([0.8, 0.5, 0, 0]), now);
+  assert.equal(b.kind, 'stops');
+  assert.equal(nowcastText(b, now, true), 'para em ~25 min'); // primeiro intervalo seco começa em t0+30
+  assert.equal(nowcast(slots([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), now), null); // sem chuva: sem aviso
+  assert.equal(nowcastText({ kind: 'starts', at: now + 2 * 60_000 }, now), 'chuva chegando');
+  assert.equal(nowcastText({ kind: 'starts', at: now - 20 * 60_000 }, now), null); // já passou
+  assert.equal(aqiLevel(38)[2], 'boa'); assert.equal(aqiLevel(120)[2], 'ruim p/ sensíveis'); assert.equal(aqiLevel(null), null);
+  assert.deepEqual(parseAir({ current: { us_aqi: 37.6, pm2_5: 9.2 } }), { aqi: 38, pm25: 9.2 });
+  assert.equal(parseAir(null), null);
+});

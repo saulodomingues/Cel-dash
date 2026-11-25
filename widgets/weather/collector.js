@@ -1,3 +1,4 @@
+import { nowcast } from './air.shared.js';
 // Tempo: Open-Meteo, gratuito e sem chave.
 export const id = 'weather';
 export const intervalMs = (cfg) => cfg.weather.intervalMin * 60_000;
@@ -24,6 +25,12 @@ const describe = (code, isDay = true) => {
 // O Open-Meteo devolve horas locais da cidade ("2026-11-25T03:00"); o S20 está no mesmo fuso.
 const ts = (s) => new Date(s).getTime();
 
+export function parseAir(j) {
+  const c = j?.current;
+  if (!c || typeof c.us_aqi !== 'number') return null;
+  return { aqi: Math.round(c.us_aqi), pm25: typeof c.pm2_5 === 'number' ? c.pm2_5 : null };
+}
+
 export function normalize(j, city, now = Date.now()) {
   const h = j.hourly, d = j.daily, c = j.current;
   const times = h.time.map(ts);
@@ -48,8 +55,11 @@ export function normalize(j, city, now = Date.now()) {
     week.push({ t: ts(`${d.time[i]}T12:00`), max: d.temperature_2m_max[i], min: d.temperature_2m_min[i], rain: d.precipitation_probability_max?.[i] ?? null, ...describe(d.weather_code[i]) });
   }
   const pick = (arr) => (Array.isArray(arr) && typeof arr[t0] === 'number' ? arr[t0] : null);
+  const m = j.minutely_15;
+  const slots = m?.time ? m.time.map((t, i) => ({ t: ts(t), mm: m.precipitation?.[i] ?? 0 })) : [];
   return {
     city: city.name,
+    nowcast: nowcast(slots, now),
     today: {
       rainMax: pick(d.precipitation_probability_max),
       rainPeakAt: left.length && (h.precipitation_probability?.[peak] ?? 0) > 0 ? times[peak] : null,
@@ -74,10 +84,18 @@ export async function collect({ config }) {
     `?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=7&wind_speed_unit=kmh` +
     '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,is_day,relative_humidity_2m' +
     '&hourly=temperature_2m,precipitation_probability' +
-    '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,uv_index_max';
-  const r = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,uv_index_max' +
+    '&minutely_15=precipitation&forecast_minutely_15=12';
+  // qualidade do ar: outro serviço do Open-Meteo; se falhar, o tempo segue sem ela
+  const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&timezone=auto&current=us_aqi,pm2_5`;
+  const [r, air] = await Promise.all([
+    fetch(url, { signal: AbortSignal.timeout(15_000) }),
+    fetch(airUrl, { signal: AbortSignal.timeout(15_000) }).then((x) => (x.ok ? x.json() : null)).catch(() => null),
+  ]);
   if (!r.ok) throw new Error(`Open-Meteo respondeu ${r.status}`);
-  return normalize(await r.json(), config.city);
+  const out = normalize(await r.json(), config.city);
+  out.air = parseAir(air);
+  return out;
 }
 
 // Dados de exemplo, iguais aos dos mocks (DEMO=1).
@@ -92,6 +110,8 @@ export function demo({ config }) {
   return {
     city: config.city.name,
     current: { temp: 21, feels: 22, wind: 12, windDir: 45, rain: 82, humidity: 78, text: 'Chuva fraca', icon: 'rain' },
+    nowcast: { kind: 'starts', at: Date.now() + 30 * 60_000 },
+    air: { aqi: 38, pm25: 9.2 },
     today: { rainMax: 80, rainPeak: 70, rainPeakAt: hour + 2 * 3600_000, rainMm: 6.4, uvMax: 7.2 },
     hours: temps.map((temp, i) => ({ t: hour + i * 3600_000, temp, rain: rain[i] })),
     days: fc.map(([max, min, code], i) => ({ t: day(i + 1, 12, 0), max, min, ...describe(code) })),

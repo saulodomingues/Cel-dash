@@ -1,5 +1,6 @@
 // Tempo: card da tela 1, curva de 24 h e arco do sol da tela 2.
 import { esc, hm, pad, deg, pct, num, dur, cardHead, noData, WD, SG, LABEL } from '/panel/lib.js';
+import { aqiLevel, nowcastText } from './air.shared.js';
 
 const CLOUD = 'M7 17a4 4 0 0 1 .6-7.95A5.5 5.5 0 0 1 18 10.5a3.3 3.3 0 0 1-.5 6.5z';
 const SMALL_CLOUD = 'M9.5 20a3.4 3.4 0 0 1 .5-6.76A4.7 4.7 0 0 1 18.9 15.4 2.8 2.8 0 0 1 18.5 20z';
@@ -22,10 +23,12 @@ export function icon(name, size = 44) {
 
 // Tela 1: atual + 5 dias.
 export function weatherCard(w, now, chip = '#14161A') {
-  const head = cardHead('Tempo', w, now);
   const d = w?.data;
+  const alert = nowcastText(d?.nowcast, now, true);
+  const head = cardHead('Tempo', w, now, alert ? `<span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(138,180,248,0.14); color: #8AB4F8; border-radius: 999px; padding: 2px 9px; font-size: 11px; letter-spacing: 0; white-space: nowrap">☂ ${esc(alert)}</span>` : '');
   if (!d) return head + noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'carregando…');
   const c = d.current;
+  const air = aqiLevel(d.air?.aqi);
   return `${head}
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
 <div style="display: flex; align-items: center; gap: 12px">
@@ -39,6 +42,7 @@ ${icon(c.icon)}
 <span>Sensação</span><span style="color: #E8EAED; text-align: right">${deg(c.feels)}</span>
 <span>Chuva</span><span style="color: #E8EAED; text-align: right">${pct(c.rain)}</span>
 <span>Vento</span><span style="color: #E8EAED; text-align: right">${num(c.wind)} km/h</span>
+${air ? `<span>Ar</span><span style="color: ${air[1]}; text-align: right; white-space: nowrap">${air[2] === 'ruim p/ sensíveis' ? 'sensíveis' : air[2]} · ${d.air.aqi}</span>` : ''}
 </div>
 </div>
 <div style="margin-top: auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; font-size: 11px; color: #9AA0A6; text-align: center">
@@ -66,6 +70,8 @@ export function chart24(w, opts = {}) {
   const W = opts.width || 756, H = opts.height || 180;
   const d = w?.data;
   const city = d?.city && !opts.noCity ? ` · ${esc(d.city)}` : '';
+  const alert = opts.alert ? nowcastText(d?.nowcast, opts.now || Date.now()) : null;
+  if (alert) opts = { ...opts, right: `<span style="display: inline-flex; align-items: center; gap: 6px; color: #8AB4F8; font-size: 12px; letter-spacing: 0">☂ ${esc(alert)}</span>` };
   const head = (right) => opts.title === false ? '' : `<div style="display: flex; justify-content: space-between; ${LABEL}${opts.pad === false ? '' : '; padding: 0 12px'}"><span>Próximas 24 h${city}</span><span>${right}</span></div>`;
   if (!d || d.hours.length < 2) return `${head('')}${noData(why(w))}`;
   const hs = d.hours;
@@ -167,11 +173,12 @@ export function todayBlock(w) {
   ].filter(Boolean).join(' · ');
   const item = (label, value, bar, color, sub) => `
 <div style="min-width: 0">
-<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 12.5px; color: #9AA0A6">${label}</span><span style="${SG}; font-size: 18px; color: #C4C7CC">${value}</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 12px; color: #9AA0A6">${label}</span><span style="${SG}; font-size: 16px; color: #C4C7CC">${value}</span></div>
 <div style="height: 3px; border-radius: 2px; background: #1C1E22; margin-top: 2px"><div style="width: ${bar === null ? 0 : Math.max(0, Math.min(100, bar))}%; height: 3px; border-radius: 2px; background: ${color}"></div></div>
-<div style="font-size: 9.5px; color: #6B7078; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${sub || '&nbsp;'}</div>
+<div style="font-size: 9.5px; color: #6B7078; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${sub || '&nbsp;'}</div>
 </div>`;
   const wind = typeof c.wind === 'number' ? c.wind : null;
+  const aq = d?.air ? aqiLevel(d.air.aqi) : null;
   // um embaixo do outro, sem título, ocupando a altura toda da coluna
   return `
 <div style="display: grid; grid-template-columns: 1fr; height: 100%; align-content: space-between">
@@ -179,6 +186,7 @@ ${item('Chuva', rain === null ? '—' : pct(rain), rain, '#8AB4F8', rainSub)}
 ${item('Umidade', typeof hum === 'number' ? pct(hum) : '—', hum ?? null, '#8AB4F8', typeof hum === 'number' ? (hum >= 80 ? 'abafado' : hum <= 30 ? 'ar seco' : '') : '')}
 ${item('UV máx', uv === null ? '—' : num(uv, 0), uv === null ? null : (uv / 11) * 100, uvCat ? uvCat[1] : '#1C1E22', uvCat ? uvCat[2] : '')}
 ${item('Vento', wind === null ? '—' : num(wind, 0), wind === null ? null : Math.min(100, (wind / 60) * 100), wind !== null && wind >= 40 ? '#FB8C3C' : '#9AA0A6', wind === null ? '' : `km/h${c.windDir !== null && c.windDir !== undefined ? ` · ${windTxt(c.windDir)}` : ''}`)}
+${aq ? item('Ar', String(d.air.aqi), Math.min(100, (d.air.aqi / 200) * 100), aq[1], `${aq[2]}${typeof d.air.pm25 === 'number' ? ` · PM2,5 ${num(d.air.pm25, 0)} µg/m³` : ''}`) : ''}
 </div>`;
 }
 

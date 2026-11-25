@@ -99,6 +99,10 @@ Seção própria "GIFs" no `/admin`: envio de vários de uma vez, galeria com pr
 
 Tela cheia: quinta opção da rotação, desligada por padrão. Quarta tela (`gif`): só uma imagem animada em tela cheia sobre preto. Envio em `/admin` → Telas (GIF, PNG, JPG ou WEBP até 20 MB, conferido pelo conteúdo), guardado em `data/media`, servido em `/media/<hex>.<ext>`. Várias imagens: cada passagem pela tela mostra a próxima. Ajuste caber/preencher. Só entra na rotação se houver imagem. O painel não recria o HTML quando nada mudou, para o GIF não reiniciar a cada dado novo.
 
+## Alerta de chuva e qualidade do ar (25/11/2026)
+
+`widgets/weather/air.shared.js`. Alerta: precipitação de 15 em 15 min do Open-Meteo (`minutely_15`, 3 h); acima de 0,1 mm num intervalo conta como chuva; avisa quando a chuva começa ou para nas próximas 2 h ("chuva começa em ~30 min", "chuva para em ~20 min", "chuva chegando"). Aparece no cabeçalho da curva das 24 h (tela 2) e como etiqueta no card do tempo (tela 1); sem chuva por perto, nada aparece. Ar: `air-quality-api.open-meteo.com` (`us_aqi`, `pm2_5`), faixas do AQI americano com nomes em português; 5º item da coluna da tela 2 e linha "Ar" no card do tempo da tela 1. Se o serviço do ar falhar, o tempo segue sem ele.
+
 ## Contadores do Claude
 
 `config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, na tela 1 (a linha do Claude saiu da tela 2); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 os 7 dias são barras deitadas (um dia por linha, hoje primeiro em âmbar e depois os anteriores, valor = % do limite semanal gasto no dia, sem título) numa coluna fixa (170 px; 150 com 3 anéis; 140 com GIF); os anéis dividem o resto. Com 1 ou 2 anéis eles crescem (108 px, 96 com GIF); com 3 ficam em 78 px; coluna abaixo de 170 px vira formato compacto. O card nunca fica vazio.
