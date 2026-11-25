@@ -88,7 +88,8 @@ function screensList() {
 <div class="screen ${s.enabled ? '' : 'off'}">
 <div class="thumb"><iframe src="/?preview&screen=${s.id}" title="Prévia: ${esc(name)}" loading="lazy" tabindex="-1"></iframe></div>
 <div class="info"><b>${i + 1}. ${esc(name)}</b><div class="muted">${esc(desc)}</div>
-<label class="check"><input type="checkbox" data-screen="${i}" ${s.enabled ? 'checked' : ''}>Mostrar na rotação</label></div>
+<label class="check"><input type="checkbox" data-screen="${i}" ${s.enabled ? 'checked' : ''}>Mostrar na rotação</label>
+${s.id === 'news' ? `<label class="check"><input type="checkbox" data-path="news.ticker" ${S.config.news.ticker ? 'checked' : ''}>Letreiro "AGORA" na tela principal</label>` : ''}</div>
 <div class="moves"><button data-move="${i}:-1" aria-label="Subir ${esc(name)}" ${i === 0 ? 'disabled' : ''}>↑</button><button data-move="${i}:1" aria-label="Descer ${esc(name)}" ${i === S.config.screens.length - 1 ? 'disabled' : ''}>↓</button></div>
 </div>`;
   }).join('');
@@ -330,14 +331,6 @@ function render() {
 ${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20" max="3600"')}
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 </div>
-<h2 style="margin-top:16px">Contadores do Claude</h2>
-<p class="muted">Quais aparecem e em que ordem, na tela principal. Cada anel que sai dá o espaço para a estatística.</p>
-<div class="screens">${counterList()}</div>
-<div class="grid" style="margin-top:8px">
-${field('claudeView.showStats', 'Mostrar últimos 7 dias (tela principal)', 'checkbox')}
-${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'checkbox')}
-
-</div>
 <div class="grid" style="margin-top:12px">
 <label>Ao lado do relógio (tela principal)<select data-path="tela1.clockExtra">
 <option value="calendar" ${S.config.tela1.clockExtra === 'calendar' ? 'selected' : ''}>Calendário do mês com feriados</option>
@@ -347,6 +340,15 @@ ${S.config.tela1.clockExtra === 'gif' ? '<option value="gif" selected>GIF (escol
 </select></label>
 ${S.config.tela1.clockExtra === 'quotes' ? quotesPicker() : ''}
 </div></section>
+
+<section class="card"><h2>Claude na tela principal</h2>
+<p class="muted">Quais aparecem e em que ordem, na tela principal. Cada anel que sai dá o espaço para a estatística.</p>
+<div class="screens">${counterList()}</div>
+<div class="grid" style="margin-top:8px">
+${field('claudeView.showStats', 'Mostrar últimos 7 dias (tela principal)', 'checkbox')}
+${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'checkbox')}
+</div>
+</section>
 
 ${gifSection()}
 
@@ -432,7 +434,7 @@ function wire() {
   app.querySelectorAll('[data-path]').forEach((el) => el.addEventListener('change', () => {
     const p = el.dataset.path;
     set(p, el.type === 'checkbox' ? el.checked : el.type === 'number' ? Number(el.value) : el.value);
-    if (p === 'tela1.clockExtra' || p === 'display.browser') render();
+    if (p === 'tela1.clockExtra' || p === 'display.browser' || p === 'news.ticker') render();
   }));
   app.querySelectorAll('[data-screen]').forEach((el) => el.addEventListener('change', () => {
     S.config.screens[Number(el.dataset.screen)].enabled = el.checked;
