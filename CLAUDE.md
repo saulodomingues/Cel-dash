@@ -76,9 +76,8 @@ Arquivos: `mocks/telaN.html` (HTML estático, abre direto no navegador) e `mocks
 - Linha de baixo, card inteiro "Claude · assinatura Max": três anéis na ordem **sessão de 5 h, semana do Fable, semana de todos os modelos**, cada um com percentual no centro e quando renova; à direita, barras dos últimos 7 dias.
 
 **Tela 2: tempo em detalhe** (layout D, aprovado em 25/11/2026; substitui o mock original)
-- Duas linhas alinhadas, sem molduras. Coluna esquerda de 214 px: em cima "Agora" (ícone, temperatura grande, condição e sensação, máx/mín e horário do sol); embaixo "Hoje" (chuva com pico e mm, umidade, UV com cor de risco, vento com direção) e o relógio no canto inferior esquerdo.
+- Duas linhas alinhadas, sem molduras. Coluna esquerda de 214 px: em cima "Agora" (ícone, temperatura grande, condição e sensação, máx/mín e horário do sol); embaixo, sem título e um embaixo do outro, chuva (pico e mm), umidade, UV (cor de risco) e vento (direção), ocupando a altura dos 7 dias. **Sem relógio** (retirado a pedido em 25/11/2026).
 - Coluna direita: em cima a curva das próximas 24 h com a chuva em barras (104 px de altura: a linha das horas fica na mesma altura da linha máx/mín/sol à esquerda; primeira linha da grade com 124 px, 28 px de espaço entre as linhas, barras dos 7 dias com 74 px); embaixo "Próximos 7 dias" em colunas (ícone, máx, barra mín→máx do âmbar ao azul, chance de chuva).
-- Atenção ao burn-in: a tela 3 também tem o relógio no canto inferior esquerdo.
 
 **Tela 3: saúde do sistema**
 - Coluna esquerda: bateria e limite de carga, temperatura, tempo do servidor no ar, memória livre, sinal do Wi-Fi, status da VPN no Pi; relógio no canto inferior esquerdo.

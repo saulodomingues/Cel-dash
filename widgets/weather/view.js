@@ -129,7 +129,7 @@ export function sunArc(w, now) {
 // Faixas do índice UV: limite, cor, nome do risco.
 const UV = [[3, '#4ADE80', 'baixo'], [6, '#F5D33D', 'moderado'], [8, '#FB8C3C', 'alto'], [11, '#F87171', 'muito alto'], [Infinity, '#C58AF9', 'extremo']];
 
-// ---------- tela 2 (layout D, aprovado em 25/11/2026) ----------
+// ---------- tela 2 (layout D, aprovado em 25/11/2026; medidores em coluna e sem relógio desde então) ----------
 const DIRS = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
 const ARROWS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
 // direção de onde o vento vem (meteorológica); a seta aponta para onde ele vai
@@ -167,14 +167,14 @@ export function todayBlock(w) {
   ].filter(Boolean).join(' · ');
   const item = (label, value, bar, color, sub) => `
 <div style="min-width: 0">
-<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 10.5px; color: #9AA0A6">${label}</span><span style="${SG}; font-size: 16px; color: #C4C7CC">${value}</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 10.5px; color: #9AA0A6">${label}</span><span style="${SG}; font-size: 18px; color: #C4C7CC">${value}</span></div>
 <div style="height: 3px; border-radius: 2px; background: #1C1E22; margin-top: 2px"><div style="width: ${bar === null ? 0 : Math.max(0, Math.min(100, bar))}%; height: 3px; border-radius: 2px; background: ${color}"></div></div>
 <div style="font-size: 9.5px; color: #6B7078; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${sub || '&nbsp;'}</div>
 </div>`;
   const wind = typeof c.wind === 'number' ? c.wind : null;
+  // um embaixo do outro, sem título, ocupando a altura toda da coluna
   return `
-<div style="${LABEL}">Hoje</div>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px">
+<div style="display: grid; grid-template-columns: 1fr; height: 100%; align-content: space-between">
 ${item('Chuva', rain === null ? '—' : pct(rain), rain, '#8AB4F8', rainSub)}
 ${item('Umidade', typeof hum === 'number' ? pct(hum) : '—', hum ?? null, '#8AB4F8', typeof hum === 'number' ? (hum >= 80 ? 'abafado' : hum <= 30 ? 'ar seco' : '') : '')}
 ${item('UV máx', uv === null ? '—' : num(uv, 0), uv === null ? null : (uv / 11) * 100, uvCat ? uvCat[1] : '#1C1E22', uvCat ? uvCat[2] : '')}
