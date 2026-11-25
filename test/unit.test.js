@@ -5,7 +5,7 @@ import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
 
-process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 's22-'));
+process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 's20-'));
 const claude = await import('../widgets/claude/collector.js');
 const weather = await import('../widgets/weather/collector.js');
 const { setConfig, publicConfig } = await import('../server/config.js');

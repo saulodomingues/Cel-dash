@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/sh
-# Instalação no Termux do S22. Rode de dentro da pasta do projeto:  sh scripts/install-termux.sh
+# Instalação no Termux do S20. Rode de dentro da pasta do projeto:  sh scripts/install-termux.sh
 set -e
 cd "$(dirname "$0")/.."
 DIR="$(pwd)"

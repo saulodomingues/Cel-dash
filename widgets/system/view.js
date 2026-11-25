@@ -1,4 +1,4 @@
-// Saúde do S22: lista da coluna esquerda e latência (tela 3).
+// Saúde do S20: lista da coluna esquerda e latência (tela 3).
 import { esc, num, deg, LABEL, SG } from '/panel/lib.js';
 
 const row = (label, value) => `<div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 12px"><span style="color: #9AA0A6">${esc(label)}</span><span style="color: #E8EAED; ${SG}; font-size: 15px; white-space: nowrap">${value}</span></div>`;
@@ -11,7 +11,7 @@ function uptime(sec) {
 
 export function systemList(w) {
   const d = w?.data;
-  const head = `<div style="${LABEL}">Sistema · S22${d ? '' : ' · sem dados'}</div>`;
+  const head = `<div style="${LABEL}">Sistema · S20${d ? '' : ' · sem dados'}</div>`;
   if (!d) return head;
   const bat = d.battery ? `${Math.round(d.battery.pct)}%${d.chargeLimit ? ` · limite ${d.chargeLimit}%` : ''}` : '—';
   // somado ao que passou desde a coleta, para não ficar parado entre atualizações

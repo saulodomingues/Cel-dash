@@ -1,7 +1,7 @@
 {
-  "name": "monitor-mesa-s22",
+  "name": "monitor-mesa-s20",
   "version": "1.0.0",
-  "description": "Painel de mesa que roda inteiro num Galaxy S22 (Termux + Node)",
+  "description": "Painel de mesa que roda inteiro num Galaxy S20 (Termux + Node)",
   "type": "module",
   "private": true,
   "engines": { "node": ">=20" },

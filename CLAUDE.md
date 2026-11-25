@@ -1,10 +1,10 @@
-# Monitor de mesa no Galaxy S22
+# Monitor de mesa no Galaxy S20
 
 Briefing do projeto. O planejamento foi feito com o Saulo em 24/11/2026; a v1 foi implementada em 25/11/2026 (ver "Estado atual"). Instalação e uso estão no `README.md`.
 
 ## Estado atual
 
-Implementado e testado só no PC (modo demo, `npm test`, navegador de 780×360). **Nada foi rodado no S22 ainda.**
+Implementado e testado só no PC (modo demo, `npm test`, navegador de 780×360). **Nada foi rodado no S20 ainda.**
 
 - Servidor Node sem dependências (`server/`), SSE em `/events` no lugar do WebSocket proposto.
 - Coletores e componentes visuais em `widgets/` (tempo, claude, system; clock só tem visual).
@@ -13,7 +13,7 @@ Implementado e testado só no PC (modo demo, `npm test`, navegador de 780×360).
 - Claude via OAuth: lê `~/.claude/.credentials.json` do aparelho ou credenciais coladas; renova o token sozinho.
 - O limite semanal por modelo é detectado na resposta (`seven_day_<modelo>`); se não houver o do Fable, o anel do meio fica sem dados ou usa o modelo escolhido no `/admin`.
 
-Não validado: chamadas reais ao Open-Meteo e ao endpoint de uso, Termux:API, interface JavaScript do Fully Kiosk (brilho, apagar, movimento), fator de escala no aparelho. Rode `npm run probe` e abra `/probe` no S22.
+Não validado: chamadas reais ao Open-Meteo e ao endpoint de uso, Termux:API, interface JavaScript do Fully Kiosk (brilho, apagar, movimento), fator de escala no aparelho. Rode `npm run probe` e abra `/probe` no S20.
 
 ## Como trabalhar neste projeto
 
@@ -24,11 +24,11 @@ Não validado: chamadas reais ao Open-Meteo e ao endpoint de uso, Termux:API, in
 
 ## Objetivo
 
-Reaproveitar um Galaxy S22 parado como monitor de mesa: um painel sempre visível, bonito e gráfico, com informações úteis.
+Reaproveitar um Galaxy S20 parado como monitor de mesa: um painel sempre visível, bonito e gráfico, com informações úteis.
 
 ## Requisitos decididos pelo Saulo
 
-- **Tudo roda no celular.** Sem Raspberry Pi, sem nuvem, sem PC ligado. O S22 é servidor e tela ao mesmo tempo.
+- **Tudo roda no celular.** Sem Raspberry Pi, sem nuvem, sem PC ligado. O S20 é servidor e tela ao mesmo tempo.
 - **Página de configurações** e **construtor de tela**, acessados pelo navegador do PC apontando para o IP do celular.
 - **Conteúdo do painel**: data e hora, previsão do tempo, uso do Claude (assinatura Max) e uso do Fable.
 - **Fora do escopo atual**: e-mails, agenda e Bambu A1. Foram desenhados na v1 e removidos a pedido. Se voltarem, as contas de e-mail seriam IMAP, Microsoft 365 e Gmail.
@@ -38,7 +38,7 @@ Reaproveitar um Galaxy S22 parado como monitor de mesa: um painel sempre visíve
 
 Proposta feita na conversa; o Saulo não contestou, mas nada foi testado no aparelho.
 
-- **Termux + Node.js** no S22, servidor HTTP na porta 8080. **Termux:Boot** para subir sozinho após reinício.
+- **Termux + Node.js** no S20, servidor HTTP na porta 8080. **Termux:Boot** para subir sozinho após reinício.
 - **`/`**: o painel, aberto em tela cheia no próprio celular pelo **Fully Kiosk Browser**.
 - **`/admin`**: aberto no PC, protegido por senha, com duas áreas:
   - construtor de tela: grade com arrastar e soltar, várias páginas;
@@ -50,14 +50,17 @@ Proposta feita na conversa; o Saulo não contestou, mas nada foi testado no apar
 
 Cuidados no Android:
 - tirar o Termux da otimização de bateria e usar `termux-wake-lock`;
-- reservar IP fixo para o S22 no DHCP do roteador;
+- reservar IP fixo para o S20 no DHCP do roteador;
 - ativar a proteção de bateria (limite de carga em 80–85%), porque o aparelho fica na tomada o tempo todo.
 
 ## Tela e resolução
 
-- Tela física do S22: **2340×1080**, usada deitada.
-- O navegador enxerga **780×360 px CSS** com escala 3x. Esse fator não foi medido no aparelho; muda se o zoom de tela do Android estiver fora do padrão. **Meça `window.innerWidth/innerHeight` e `devicePixelRatio` no aparelho antes de fixar o layout.**
-- Os mocks foram desenhados em 780×360 e exportados em 2340×1080.
+O aparelho é um **Galaxy S20** (o briefing original dizia S22 por engano; os mocks ainda trazem "S22" no título).
+
+- Tela física do S20: 3200×1440, mas o Android renderiza em **2400×1080 (FHD+)** por padrão; proporção 20:9, usada deitada.
+- O navegador deve enxergar cerca de **800×360 px CSS** (escala 3x em FHD+, 4x em WQHD+). Não foi medido no aparelho; confira em `/probe`.
+- Os mocks foram desenhados em 780×360. O painel mantém esse palco e se ajusta sozinho: em 800×360 sobram ~10 px pretos de cada lado.
+- A proteção de bateria do S20 (One UI 4+) limita a carga em 85%, valor fixo.
 
 ## As três telas
 
@@ -102,12 +105,12 @@ Configuráveis no `/admin`: horário noturno, brilho dia/noite, tempo até apaga
 
 - **Tempo**: Open-Meteo, gratuito e sem chave. Sugerido na conversa; não testado.
 - **Uso do Claude (assinatura)**: não há API oficial para os limites do plano. Ferramentas da comunidade usam endpoints não documentados: o que a página de uso do claude.ai consulta (`/api/organizations/{org_id}/usage`) e `https://api.anthropic.com/api/oauth/usage` com o token OAuth do Claude Code. Há relatos de 429 persistente no segundo para assinantes Max. Pode quebrar sem aviso: o widget deve mostrar "sem dados" em vez de travar o painel, e a coleta deve ser espaçada.
-- **Sistema do S22**: Termux:API (`termux-battery-status`, `termux-wifi-connectioninfo`) e leituras do próprio processo Node.
+- **Sistema do S20**: Termux:API (`termux-battery-status`, `termux-wifi-connectioninfo`) e leituras do próprio processo Node.
 
 ## Pendências e incertezas
 
 - **Fable com limite semanal próprio**: o mock mostra um percentual semanal só do Fable. Não foi verificado se a assinatura expõe esse número. Se não expuser, o bloco vira contagem de uso do Fable sem percentual.
-- **Viabilidade do endpoint de uso** a partir do celular: onde fica o token e como renová-lo sem o Claude Code instalado no S22.
+- **Viabilidade do endpoint de uso** a partir do celular: onde fica o token e como renová-lo sem o Claude Code instalado no S20.
 - **Mock do `/admin`** (construtor e configurações): ainda não foi feito.
 - **Mock da tela ociosa**: ainda não foi feito.
 - **Fator de escala 3x**: confirmar no aparelho.
@@ -115,4 +118,4 @@ Configuráveis no `/admin`: horário noturno, brilho dia/noite, tempo até apaga
 
 ## Próximo passo sugerido
 
-Validar no S22, antes de qualquer interface: Termux + Node servindo uma página, Fully Kiosk em tela cheia, e uma chamada de teste ao endpoint de uso do Claude. Se a coleta de uso não for viável, o desenho das três telas muda, porque o Claude ocupa metade delas.
+Validar no S20, antes de qualquer interface: Termux + Node servindo uma página, Fully Kiosk em tela cheia, e uma chamada de teste ao endpoint de uso do Claude. Se a coleta de uso não for viável, o desenho das três telas muda, porque o Claude ocupa metade delas.

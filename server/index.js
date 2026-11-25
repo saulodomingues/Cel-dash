@@ -1,4 +1,4 @@
-// Servidor do painel: HTTP puro, sem dependências. Roda no Termux do próprio S22.
+// Servidor do painel: HTTP puro, sem dependências. Roda no Termux do próprio S20.
 //   /        painel (Fully Kiosk no celular)
 //   /admin   configurações e telas (celular ou navegador do PC)
 //   /events  SSE: empurra dados e configuração para o painel na hora

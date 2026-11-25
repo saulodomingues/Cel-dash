@@ -35,7 +35,7 @@ export const DEFAULTS = {
   },
   system: {
     intervalSec: 60,
-    chargeLimit: 80,
+    chargeLimit: 85,
     pingHost: '1.1.1.1',
     pingPort: 443,
     vpn: { label: 'VPN no Pi', host: '', port: 22 },

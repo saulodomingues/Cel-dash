@@ -12,7 +12,7 @@ const SESSION_MS = 5 * 3600_000;
 
 async function request(token) {
   return fetch(USAGE_URL, {
-    headers: { Authorization: `Bearer ${token}`, 'anthropic-beta': 'oauth-2025-04-20', Accept: 'application/json', 'User-Agent': 'monitor-mesa-s22/1.0' },
+    headers: { Authorization: `Bearer ${token}`, 'anthropic-beta': 'oauth-2025-04-20', Accept: 'application/json', 'User-Agent': 'monitor-mesa-s20/1.0' },
     signal: AbortSignal.timeout(20_000),
   });
 }

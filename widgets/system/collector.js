@@ -1,4 +1,4 @@
-// Saúde do S22: Termux:API (bateria, Wi-Fi), /proc, e testes de rede feitos pelo próprio Node.
+// Saúde do S20: Termux:API (bateria, Wi-Fi), /proc, e testes de rede feitos pelo próprio Node.
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import net from 'node:net';

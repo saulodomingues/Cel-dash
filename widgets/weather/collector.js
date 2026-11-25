@@ -21,7 +21,7 @@ const describe = (code, isDay = true) => {
   return { text: w[0], icon: isDay ? w[1] : w[2] };
 };
 
-// O Open-Meteo devolve horas locais da cidade ("2026-11-25T03:00"); o S22 está no mesmo fuso.
+// O Open-Meteo devolve horas locais da cidade ("2026-11-25T03:00"); o S20 está no mesmo fuso.
 const ts = (s) => new Date(s).getTime();
 
 export function normalize(j, city, now = Date.now()) {

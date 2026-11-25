@@ -1,8 +1,8 @@
 // /admin: telas e configurações. Funciona no navegador do PC e no próprio celular.
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol e Claude em linha'], tela3: ['Saúde do sistema', 'S22, curva da sessão e latência'] };
-const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S22' };
+const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol e Claude em linha'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'] };
+const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S20' };
 let S = null; // { config, secrets, status, server, demo }
 let dirty = false;
 
@@ -29,7 +29,7 @@ async function boot() {
   const setup = s.needsSetup;
   app.innerHTML = `
 <div class="card login">
-<h1>Painel S22</h1>
+<h1>Painel S20</h1>
 <p class="muted">${setup ? 'Primeiro acesso: crie a senha das configurações (mínimo de 6 caracteres).' : 'Entre com a senha das configurações.'}</p>
 <form id="login">
 <label>Senha<input type="password" name="password" autocomplete="${setup ? 'new-password' : 'current-password'}" required minlength="${setup ? 6 : 1}" autofocus></label>
@@ -124,7 +124,7 @@ function render() {
   const ips = S.server.ips.map((ip) => `<code>http://${ip}:${S.server.port}/admin</code>`).join(' ');
   app.innerHTML = `
 <header>
-<div><h1>Painel S22</h1><p class="muted">${S.demo ? 'MODO DEMO: dados de exemplo. ' : ''}${ips ? `No PC, abra ${ips}` : `Porta ${S.server.port}`} · Node ${esc(S.server.node)}</p></div>
+<div><h1>Painel S20</h1><p class="muted">${S.demo ? 'MODO DEMO: dados de exemplo. ' : ''}${ips ? `No PC, abra ${ips}` : `Porta ${S.server.port}`} · Node ${esc(S.server.node)}</p></div>
 <div class="row"><a href="/">Voltar ao painel</a><button id="logout">Sair</button></div>
 </header>
 
@@ -250,4 +250,4 @@ function wire() {
 }
 
 addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
-boot().catch((e) => { app.innerHTML = `<div class="card login"><h1>Painel S22</h1><p class="muted">Não consegui falar com o servidor: ${esc(e.message)}</p></div>`; });
+boot().catch((e) => { app.innerHTML = `<div class="card login"><h1>Painel S20</h1><p class="muted">Não consegui falar com o servidor: ${esc(e.message)}</p></div>`; });

@@ -42,11 +42,11 @@ export function wakeBriefly() { wakeUntil = Date.now() + 120_000; activity(); }
 export function bindFully() {
   const f = F();
   if (!f) return;
-  window.__s22motion = () => activity(true);
-  window.__s22screenOn = () => activity();
+  window.__s20motion = () => activity(true);
+  window.__s20screenOn = () => activity();
   try {
-    f.bind('onMotion', '__s22motion();');
-    f.bind('screenOn', '__s22screenOn();');
+    f.bind('onMotion', '__s20motion();');
+    f.bind('screenOn', '__s20screenOn();');
   } catch { /* versões antigas do Fully */ }
 }
 

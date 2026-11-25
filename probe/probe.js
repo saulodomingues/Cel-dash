@@ -1,4 +1,4 @@
-// Sonda de validação no S22: rode `npm run probe` no Termux antes de confiar no painel.
+// Sonda de validação no S20: rode `npm run probe` no Termux antes de confiar no painel.
 // Testa cada fonte de dados isoladamente e diz o que funcionou. Não grava nada além de
 // data/probe-usage.json (a resposta bruta do endpoint de uso, sem o token).
 import fs from 'node:fs';

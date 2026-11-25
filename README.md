@@ -1,9 +1,9 @@
-# Monitor de mesa no Galaxy S22
+# Monitor de mesa no Galaxy S20
 
-Painel de mesa que roda inteiro no celular: o S22 coleta os dados, serve as páginas e mostra a tela. Sem PC ligado, sem nuvem, sem Raspberry Pi.
+Painel de mesa que roda inteiro no celular: o S20 coleta os dados, serve as páginas e mostra a tela. Sem PC ligado, sem nuvem, sem Raspberry Pi.
 
-- **`/`** é o painel, aberto em tela cheia no próprio S22 pelo Fully Kiosk Browser.
-- **`/admin`** são as configurações e as telas, abertas no próprio celular ou no navegador do PC (`http://IP-DO-S22:8080/admin`).
+- **`/`** é o painel, aberto em tela cheia no próprio S20 pelo Fully Kiosk Browser.
+- **`/admin`** são as configurações e as telas, abertas no próprio celular ou no navegador do PC (`http://IP-DO-S20:8080/admin`).
 
 Sem dependências: só Node 20+ e os arquivos deste repositório.
 
@@ -15,7 +15,7 @@ npm run demo        # dados de exemplo, iguais aos dos mocks
 
 Abra `http://localhost:8080/` (painel) e `http://localhost:8080/admin`. Para fixar uma tela: `/?screen=tela2`.
 
-## Instalar no S22
+## Instalar no S20
 
 1. Instale pelo **F-Droid** (as versões da Play Store estão abandonadas): **Termux**, **Termux:API** e **Termux:Boot**. Abra o Termux:Boot uma vez.
 2. No Termux:
@@ -28,14 +28,14 @@ Abra `http://localhost:8080/` (painel) e `http://localhost:8080/admin`. Para fix
    O script instala Node e Termux:API e cria `~/.termux/boot/monitor-mesa.sh`, que sobe o servidor sozinho a cada reinício do aparelho.
 3. Inicie agora: `sh ~/.termux/boot/monitor-mesa.sh &`
 4. Valide as fontes de dados: `npm run probe`. Ele testa Termux:API, rede, Open-Meteo e o uso do Claude, um por um.
-5. No Android: tire o Termux da otimização de bateria, ligue a proteção de bateria (limite de carga) e reserve um IP fixo para o S22 no roteador.
+5. No Android: tire o Termux da otimização de bateria, ligue a proteção de bateria (limite de carga) e reserve um IP fixo para o S20 no roteador.
 
 ### Login do Claude (OAuth)
 
 O painel lê o uso da assinatura com o token OAuth do Claude Code. Dois caminhos, escolhidos no `/admin`:
 
-- **No próprio S22 (recomendado):** instale o Claude Code no Termux (`npm install -g @anthropic-ai/claude-code`), rode `claude` e faça o login. O painel lê `~/.claude/.credentials.json` e renova o token sozinho, regravando o arquivo.
-- **Colando credenciais:** no PC, copie o conteúdo de `~/.claude/.credentials.json` (Linux e Windows; no macOS fica no Keychain) e cole em `/admin` → Claude. Como o refresh token é rotativo, o Claude Code do PC pode pedir login de novo depois que o S22 renovar o dele.
+- **No próprio S20 (recomendado):** instale o Claude Code no Termux (`npm install -g @anthropic-ai/claude-code`), rode `claude` e faça o login. O painel lê `~/.claude/.credentials.json` e renova o token sozinho, regravando o arquivo.
+- **Colando credenciais:** no PC, copie o conteúdo de `~/.claude/.credentials.json` (Linux e Windows; no macOS fica no Keychain) e cole em `/admin` → Claude. Como o refresh token é rotativo, o Claude Code do PC pode pedir login de novo depois que o S20 renovar o dele.
 
 O endpoint de uso não é documentado e pode mudar ou responder 429. Nesse caso o painel mostra "sem dados" no bloco do Claude, espaça as tentativas e o resto segue funcionando. O motivo aparece em `/admin` → Estado da coleta.
 
