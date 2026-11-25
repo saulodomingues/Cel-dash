@@ -61,7 +61,7 @@ export function mountNews(root) {
     s.className = 'story in';
     s.innerHTML = `<div><span style="color: ${RED}; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase">${esc(it.source)}</span> <span style="font-size: 12px; color: #6B7078">· ${[rel(it.t, now), `${i + 1}/${items.length}`].filter(Boolean).join(' · ')}</span></div>
 <div style="font-size: ${it.title.length > 110 ? 26 : 31}px; line-height: 1.18; font-weight: 600; letter-spacing: -0.015em; margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden">${esc(it.title)}</div>
-${it.summary ? `<div style="font-size: 15px; line-height: 1.4; color: #9AA0A6; margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">${esc(it.summary)}</div>` : ''}`;
+${it.summary ? `<div style="font-size: 15px; line-height: 1.4; color: #9AA0A6; margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden">${esc(it.summary)}</div>` : ''}`;
     main.appendChild(s);
     requestAnimationFrame(() => requestAnimationFrame(() => s.classList.remove('in')));
     if (cur) { const old = cur; old.classList.add('out'); setTimeout(() => old.remove(), 800); }

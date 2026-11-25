@@ -35,7 +35,7 @@ export function parseFeed(xml, source) {
     const when = tag(b, 'pubDate') || tag(b, 'published') || tag(b, 'updated') || tag(b, 'dc:date');
     const t = Date.parse(decode(when)) || null;
     let summary = clean(tag(b, 'description') || tag(b, 'summary') || tag(b, 'content'));
-    if (summary.length > 220) summary = `${summary.slice(0, 217).replace(/\s+\S*$/, '')}…`;
+    if (summary.length > 480) summary = `${summary.slice(0, 477).replace(/\s+\S*$/, '')}…`; // até ~4 linhas na tela
     if (summary === title) summary = '';
     items.push({ title, summary, t, source });
   }
