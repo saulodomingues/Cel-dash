@@ -262,6 +262,10 @@ async function api(req, res, url) {
     const updated = await updater.check();
     return send(res, 200, { updated, update: updater.status });
   }
+  if (p === '/api/admin/display/test' && m === 'POST') {
+    await display.test();
+    return send(res, 200, { display: display.status });
+  }
   if (p === '/api/admin/reload-panel' && m === 'POST') {
     broadcast('reload', {});
     return send(res, 200, { ok: true });

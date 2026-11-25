@@ -3,6 +3,7 @@
 // apagada, o mínimo (o painel fica preto, e no AMOLED pixel preto fica desligado).
 // Precisa da permissão "Modificar configurações do sistema" para o app Termux:API.
 import { execFile } from 'node:child_process';
+import fs from 'node:fs';
 import { getConfig } from './config.js';
 import { inRange } from '../panel/burnin.js';
 
@@ -18,9 +19,10 @@ function run(level) {
   return new Promise((resolve, reject) => {
     execFile('termux-brightness', [String(level)], { timeout: 10_000 }, (err, _out, stderr) => {
       if (!err) return resolve();
-      reject(new Error(err.code === 'ENOENT'
-        ? 'termux-brightness não encontrado (instale o Termux:API).'
-        : (stderr || err.message).trim().split('\n').pop() || 'falhou'));
+      if (err.code === 'ENOENT') return reject(new Error('termux-brightness não encontrado: rode "pkg install termux-api" no Termux.'));
+      // sem resposta: em geral o app Termux:API não está instalado, ou veio de outra loja que não a do Termux
+      if (err.killed || err.signal) return reject(new Error('o app Termux:API não respondeu. Confira se ele está instalado e se veio da mesma loja do Termux (F-Droid ou GitHub).'));
+      reject(new Error((stderr || err.message).trim().split('\n').pop() || 'falhou'));
     });
   });
 }
@@ -39,9 +41,20 @@ export async function apply(force = false) {
   }
 }
 
+// No aparelho: Node do Termux. Não depende de variáveis de ambiente (o Termux:Boot pode não passar todas).
+export const inTermux = () => process.execPath.includes('com.termux') || fs.existsSync('/data/data/com.termux/files/usr/bin/termux-brightness');
+
+// Teste pelo /admin: brilho máximo por 3 s e volta ao do horário.
+export async function test() {
+  if (!inTermux()) throw new Error('Só funciona no celular, com o servidor rodando no Termux.');
+  await run(255);
+  setTimeout(() => apply(true), 3000);
+  Object.assign(status, { error: null, at: Date.now() });
+}
+
 export function start() {
   // só no aparelho: fora do Termux o comando não existe e não há tela para ajustar
-  if (!process.env.PREFIX?.includes('com.termux')) { status.error = 'Só funciona no Termux.'; return; }
+  if (!inTermux()) { status.error = 'Só funciona no celular, com o servidor rodando no Termux.'; return; }
   apply(true);
   setInterval(() => apply(), 60_000).unref();
 }

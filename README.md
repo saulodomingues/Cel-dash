@@ -40,7 +40,7 @@ Em "Opções avançadas" continuam disponíveis colar o `.credentials.json` do C
 
 1. No Chrome do S20, abra `http://localhost:8080/` (tem que ser `localhost`, não o IP: só assim o Chrome permite manter a tela ligada e instalar como app).
 2. Menu ⋮ → **Instalar app** (ou "Adicionar à tela inicial"). Abra pelo ícone novo "Painel": ele abre em tela cheia, deitado e sem barra de endereço.
-3. Brilho por horário: o servidor ajusta com `termux-brightness`. Dê a permissão em Configurações do Android → Apps → **Termux:API** → **Modificar configurações do sistema** → permitir. O resultado aparece em `/admin` → Brilho e descanso da tela.
+3. Brilho por horário: o servidor ajusta com `termux-brightness`. Dê a permissão em Configurações do Android → Apps → **Termux:API** → **Modificar configurações do sistema** → permitir, e desligue o **brilho adaptável** do Android (ele desfaz o ajuste). O resultado e o botão "Testar brilho" ficam em `/admin` → Brilho e descanso da tela.
 4. No horário de tela apagada (configurado no `/admin`), o painel fica todo preto e o brilho vai ao mínimo. No AMOLED, pixel preto fica desligado.
 5. Não há detecção de movimento no Chrome, então não há tela ociosa.
 

@@ -336,7 +336,9 @@ ${gifSection()}
 </div>
 <p class="muted" style="margin:8px 0 12px">${S.config.display.browser === 'fully'
     ? 'Fully: brilho, apagar a tela e detecção de movimento pela interface JavaScript dele (ligue em Advanced Web Settings). A tela ociosa usa a detecção de movimento.'
-    : `Chrome: o brilho é ajustado pelo Termux e, no horário de apagar, o painel fica preto (no AMOLED, pixel preto fica desligado). Sem detecção de movimento, não há tela ociosa. ${displayInfo()}`}</p>
+    : `Chrome: o brilho é ajustado pelo Termux e, no horário de apagar, o painel fica preto (no AMOLED, pixel preto fica desligado). Sem detecção de movimento, não há tela ociosa.`}</p>
+${S.config.display.browser === 'chrome' ? `<div class="row" style="margin-bottom:12px"><span class="muted" style="flex:1 1 300px">${displayInfo()}</span><button id="testBright">Testar brilho (máximo por 3 s)</button></div>
+<p class="muted" style="margin-bottom:12px">Para o brilho mudar: dê ao app <b>Termux:API</b> a permissão "Modificar configurações do sistema" (Configurações → Apps → Termux:API) e desligue o <b>brilho adaptável</b> do Android, que desfaz o ajuste. O horário de apagar só vale com "Apagar a tela em horário fixo" marcado, abaixo.</p>` : ''}
 <div class="grid">
 ${field('brightness.day', 'Brilho de dia (%)', 'number', 'min="1" max="100"')}
 ${field('brightness.night', 'Brilho à noite (%)', 'number', 'min="1" max="100"')}
@@ -516,6 +518,15 @@ ${item('full', 'Na tela cheia', onFull)}
   document.getElementById('gitClear').addEventListener('click', guard(async () => {
     S.secrets = (await call('PUT', '/api/admin/secrets/git', { token: '' })).secrets;
     render(); toast('Token apagado.');
+  }));
+  document.getElementById('testBright')?.addEventListener('click', guard(async (e) => {
+    e.target.disabled = true;
+    try {
+      const r = await call('POST', '/api/admin/display/test');
+      S.display = r.display;
+      toast('Brilho no máximo por 3 s. Se a tela do celular não clareou, veja o aviso acima.');
+    } finally { e.target.disabled = false; }
+    setTimeout(guard(load), 4000);
   }));
   document.getElementById('reload').addEventListener('click', guard(async () => { await call('POST', '/api/admin/reload-panel'); toast('Painel recarregado.'); }));
   document.getElementById('logout').addEventListener('click', guard(async () => { await call('POST', '/api/admin/logout'); boot(); }));
