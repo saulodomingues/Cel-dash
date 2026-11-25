@@ -120,6 +120,16 @@ ${field('claude.planLabel', 'Rótulo do plano', 'text')}
 </div>`;
 }
 
+function updateInfo() {
+  const u = S.update;
+  const when = u.date ? new Date(u.date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+  let t = `Versão instalada: <code>${esc(u.version)}</code>${when ? ` de ${when}` : ''}${u.branch ? `, ramo <code>${esc(u.branch)}</code>` : ''}.`;
+  if (!u.supervised) return `${t} Atualização automática desligada: o servidor não foi iniciado pelo <code>scripts/run.sh</code>.`;
+  t += ` Última conferência: ${ago(u.checkedAt)}.`;
+  if (u.error) t += ` <span class="err">Falhou: ${esc(u.error)}</span>`;
+  return t;
+}
+
 function render() {
   const ips = S.server.ips.map((ip) => `<code>http://${ip}:${S.server.port}/admin</code>`).join(' ');
   app.innerHTML = `
@@ -173,6 +183,13 @@ ${field('system.vpn.port', 'Porta do serviço', 'number', 'min="1" max="65535"')
 ${field('port', 'Porta do servidor (exige reinício)', 'number', 'min="1024" max="65535"')}
 </div></section>
 
+<section class="card"><h2>Atualização</h2><p class="muted">${updateInfo()}</p>
+<div class="grid">
+${field('update.enabled', 'Atualizar sozinho pelo GitHub', 'checkbox')}
+${field('update.intervalMin', 'Conferir a cada (min)', 'number', 'min="1" max="1440"')}
+<button id="update" ${S.update.supervised ? '' : 'disabled'}>Buscar atualização agora</button>
+</div></section>
+
 <section class="card"><h2>Senha</h2>
 <form id="pw" class="row">
 <label>Senha atual<input type="password" name="current" autocomplete="current-password" required></label>
@@ -211,6 +228,13 @@ function wire() {
     S.config = r.config; dirty = false;
     toast(r.portChanged ? 'Salvo. A porta nova vale depois de reiniciar o servidor.' : 'Salvo. O painel já foi atualizado.');
     setTimeout(guard(load), 1500); // dá tempo de a coleta refeita terminar
+  }));
+  document.getElementById('update').addEventListener('click', guard(async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Conferindo…';
+    const r = await call('POST', '/api/admin/update').finally(() => { e.target.disabled = false; e.target.textContent = 'Buscar atualização agora'; });
+    if (!r.updated) { S.update = r.update; toast('Já está na versão mais recente.'); return render(); }
+    toast('Versão nova baixada. Reiniciando o servidor…');
+    setTimeout(() => location.reload(), 8000);
   }));
   document.getElementById('reload').addEventListener('click', guard(async () => { await call('POST', '/api/admin/reload-panel'); toast('Painel recarregado.'); }));
   document.getElementById('logout').addEventListener('click', guard(async () => { await call('POST', '/api/admin/logout'); boot(); }));

@@ -85,6 +85,9 @@ function connect() {
   const es = new EventSource('/events');
   es.addEventListener('state', (e) => {
     const s = JSON.parse(e.data);
+    // o servidor voltou com outra versão (atualização automática): recarrega para pegar o código novo
+    if (st.version && s.version !== st.version) return location.reload();
+    st.version = s.version;
     st.config = s.config; st.data = s.data;
     if (!st.current) st.current = enabled()[0];
     render(); layout();

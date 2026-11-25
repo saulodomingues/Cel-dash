@@ -9,6 +9,7 @@ import path from 'node:path';
 import { ROOT, getConfig, setConfig, publicConfig, getSecrets, saveSecrets } from './config.js';
 import * as auth from './auth.js';
 import * as scheduler from './scheduler.js';
+import * as updater from './updater.js';
 
 const DEMO = process.env.DEMO === '1';
 const MIME = {
@@ -25,7 +26,7 @@ function broadcast(event, data) {
 }
 setInterval(() => { for (const res of clients) res.write(': ping\n\n'); }, 25_000).unref();
 
-const fullState = () => ({ config: publicConfig(), data: scheduler.state, demo: DEMO, now: Date.now() });
+const fullState = () => ({ config: publicConfig(), data: scheduler.state, demo: DEMO, now: Date.now(), version: updater.status.version });
 
 // ---------- utilidades HTTP ----------
 function send(res, code, body, headers = {}) {
@@ -145,7 +146,7 @@ async function api(req, res, url) {
   }
   if (p === '/api/admin/config' && m === 'GET') {
     return send(res, 200, {
-      config: getConfig(), secrets: secretsStatus(), status: scheduler.state, demo: DEMO,
+      config: getConfig(), secrets: secretsStatus(), status: scheduler.state, demo: DEMO, update: updater.status,
       server: { ips: localIps(), port: getConfig().port, uptimeSec: Math.round(process.uptime()), node: process.version },
     });
   }
@@ -180,6 +181,10 @@ async function api(req, res, url) {
       name: c.name, region: [c.admin1, c.country].filter(Boolean).join(', '), lat: c.latitude, lon: c.longitude,
     })) });
   }
+  if (p === '/api/admin/update' && m === 'POST') {
+    const updated = await updater.check();
+    return send(res, 200, { updated, update: updater.status });
+  }
   if (p === '/api/admin/reload-panel' && m === 'POST') {
     broadcast('reload', {});
     return send(res, 200, { ok: true });
@@ -209,13 +214,15 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+await updater.init();
+updater.start();
 await scheduler.loadCollectors();
 scheduler.start((id, st) => broadcast('data', { id, state: st }));
 
 const port = Number(process.env.PORT) || getConfig().port;
 server.listen(port, '0.0.0.0', () => {
   const ips = localIps();
-  console.log(`Painel em http://localhost:${port}/  ·  admin em /admin${DEMO ? '  ·  MODO DEMO (dados de exemplo)' : ''}`);
+  console.log(`Versão ${updater.status.version}. Painel em http://localhost:${port}/  ·  admin em /admin${DEMO ? '  ·  MODO DEMO (dados de exemplo)' : ''}`);
   for (const ip of ips) console.log(`  na rede: http://${ip}:${port}/admin`);
 });
 

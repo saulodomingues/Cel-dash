@@ -5,17 +5,13 @@ cd "$(dirname "$0")/.."
 DIR="$(pwd)"
 
 pkg update -y
-pkg install -y nodejs-lts termux-api
+pkg install -y nodejs-lts termux-api git
 
 # sobe sozinho depois de reiniciar o aparelho (precisa do app Termux:Boot aberto uma vez)
 mkdir -p "$HOME/.termux/boot"
 cat > "$HOME/.termux/boot/monitor-mesa.sh" <<BOOT
 #!/data/data/com.termux/files/usr/bin/sh
-termux-wake-lock
-cd "$DIR"
-mkdir -p data
-[ -f data/server.log ] && tail -n 2000 data/server.log > data/server.log.old
-exec node server/index.js > data/server.log 2>&1
+exec sh "$DIR/scripts/run.sh"
 BOOT
 chmod +x "$HOME/.termux/boot/monitor-mesa.sh"
 

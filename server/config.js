@@ -25,6 +25,7 @@ export const DEFAULTS = {
   night: { start: '22:00', end: '07:00' },
   sleep: { enabled: false, start: '00:30', end: '06:30' },
   idle: { enabled: true, afterMin: 10, offAfterMin: 20 },
+  update: { enabled: true, intervalMin: 5 },
   weather: { intervalMin: 15 },
   claude: {
     intervalMin: 10,
@@ -86,6 +87,7 @@ function sanitize(c) {
   }
   c.idle.afterMin = clamp(c.idle.afterMin, 1, 720);
   c.idle.offAfterMin = clamp(c.idle.offAfterMin, 0, 720);
+  c.update.intervalMin = clamp(Math.round(c.update.intervalMin), 1, 1440);
   c.weather.intervalMin = clamp(c.weather.intervalMin, 5, 180);
   c.claude.intervalMin = clamp(c.claude.intervalMin, 5, 180); // coleta espaçada: endpoint não documentado
   c.claude.source = c.claude.source === 'manual' ? 'manual' : 'file';

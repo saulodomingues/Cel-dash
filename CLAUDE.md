@@ -11,6 +11,7 @@ Implementado e testado só no PC (modo demo, `npm test`, navegador de 780×360).
 - As três telas reproduzem os mocks; tela ociosa feita sem mock (relógio cinza que muda de lugar).
 - `/admin`: senha, ordem e ativação das telas, todas as configurações, credenciais do Claude. O construtor com grade de arrastar e soltar **não** foi feito: a v1 só ordena e liga/desliga as três telas.
 - Claude via OAuth: lê `~/.claude/.credentials.json` do aparelho ou credenciais coladas; renova o token sozinho.
+- Atualização automática: `server/updater.js` faz `git pull` a cada 5 min e sai; `scripts/run.sh` sobe de novo; o painel recarrega ao ver a versão mudar. O S20 segue o ramo que clonou.
 - O limite semanal por modelo é detectado na resposta (`seven_day_<modelo>`); se não houver o do Fable, o anel do meio fica sem dados ou usa o modelo escolhido no `/admin`.
 
 Não validado: chamadas reais ao Open-Meteo e ao endpoint de uso, Termux:API, interface JavaScript do Fully Kiosk (brilho, apagar, movimento), fator de escala no aparelho. Rode `npm run probe` e abra `/probe` no S20.
