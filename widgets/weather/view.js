@@ -24,7 +24,7 @@ export function icon(name, size = 44) {
 export function weatherCard(w, now, chip = '#14161A') {
   const head = cardHead('Tempo', w, now);
   const d = w?.data;
-  if (!d) return head + noData();
+  if (!d) return head + noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'carregando…');
   const c = d.current;
   return `${head}
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
@@ -60,12 +60,14 @@ function smooth(pts) {
 
 // Curva das próximas 24 h com a chance de chuva em barras azuis.
 // opts.width/height: tamanho do desenho; o padrão é o da tela 2 antiga (756×180).
+const why = (w) => (w?.error ? 'sem dados · veja o motivo no /admin' : 'carregando…');
+
 export function chart24(w, opts = {}) {
   const W = opts.width || 756, H = opts.height || 180;
   const d = w?.data;
   const city = d?.city && !opts.noCity ? ` · ${esc(d.city)}` : '';
   const head = (right) => opts.title === false ? '' : `<div style="display: flex; justify-content: space-between; ${LABEL}${opts.pad === false ? '' : '; padding: 0 12px'}"><span>Próximas 24 h${city}</span><span>${right}</span></div>`;
-  if (!d || d.hours.length < 2) return `${head('sem dados')}${noData()}`;
+  if (!d || d.hours.length < 2) return `${head('')}${noData(why(w))}`;
   const hs = d.hours;
   const temps = hs.map((h) => h.temp);
   const max = Math.max(...temps), min = Math.min(...temps);
@@ -143,7 +145,7 @@ export function nowBlock(w, now) {
   const rise = d?.sun?.rises.find((t) => new Date(t).toDateString() === new Date(now).toDateString());
   const set = d?.sun?.sets.find((t) => new Date(t).toDateString() === new Date(now).toDateString());
   const city = d?.city ? ` · ${esc(d.city)}` : '';
-  if (!c) return `<div style="${LABEL}">Agora${city}</div>${noData()}`;
+  if (!c) return `<div style="${LABEL}">Agora${city}</div>${noData(why(w))}`;
   return `
 <div style="${LABEL}">Agora${city}</div>
 <div style="display: flex; align-items: center; gap: 10px">${icon(c.icon, 44)}<div style="${SG}; font-size: 54px; line-height: 1; font-weight: 500">${deg(c.temp)}</div></div>
@@ -183,7 +185,7 @@ ${item('Vento', wind === null ? '—' : num(wind, 0), wind === null ? null : Mat
 // Próximos 7 dias: colunas com ícone, máxima, barra da mínima à máxima (âmbar → azul) e chance de chuva.
 export function weekColumns(w, barH = 70) {
   const days = w?.data?.week || [];
-  if (!days.length) return `<div style="${LABEL}">Próximos 7 dias</div>${noData()}`;
+  if (!days.length) return `<div style="${LABEL}">Próximos 7 dias</div>${noData(why(w))}`;
   const lo = Math.min(...days.map((d) => d.min)) - 1, hi = Math.max(...days.map((d) => d.max)) + 1;
   const cols = days.map((d, i) => {
     const top = ((hi - d.max) / (hi - lo)) * barH, h = Math.max(4, ((d.max - d.min) / (hi - lo)) * barH);

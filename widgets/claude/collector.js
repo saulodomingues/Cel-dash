@@ -6,6 +6,7 @@ import { getToken } from './auth.js';
 export const id = 'claude';
 export const intervalMs = (cfg) => cfg.claude.intervalMin * 60_000;
 export const minRetryMs = 5 * 60_000; // endpoint não documentado: nunca insistir rápido
+export const maxRetryMs = 3600_000;
 
 const USAGE_URL = 'https://api.anthropic.com/api/oauth/usage';
 const SESSION_MS = 5 * 3600_000;
