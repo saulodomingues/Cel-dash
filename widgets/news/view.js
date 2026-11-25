@@ -37,8 +37,10 @@ const rel = (t, now) => {
 };
 
 let timer = null;
-// posição na fila, para continuar de onde parou quando a tela volta na rotação
-const resume = { key: '', i: -1 };
+// Última manchete mostrada, para continuar de onde parou quando a tela volta na rotação ou
+// quando chegam manchetes novas. Procura essa manchete na lista atual; se ela saiu da lista,
+// segue pela mesma posição. Nunca volta para a primeira sem motivo.
+const resume = { title: '', i: -1 };
 export function mountNews(root) {
   clearInterval(timer);
   const el = root.querySelector('#news');
@@ -50,12 +52,13 @@ export function mountNews(root) {
   const updAge = () => { age.textContent = [ago({ at: cfg.at }, Date.now()), cfg.sources ? `${cfg.sources} ${cfg.sources > 1 ? 'fontes' : 'fonte'}` : ''].filter(Boolean).join(' · '); };
   updAge();
   if (!items.length) return;
-  const key = items.map((x) => x.title).join('|');
-  let i = resume.key === key ? resume.i : -1, cur = null;
+  const found = items.findIndex((x) => x.title === resume.title);
+  let i = found >= 0 ? found : resume.i >= 0 ? (resume.i - 1 + items.length) % items.length : -1;
+  let cur = null;
   const show = () => {
     if (!el.isConnected) { clearInterval(timer); return; }
     i = (i + 1) % items.length;
-    Object.assign(resume, { key, i });
+    Object.assign(resume, { title: items[i].title, i });
     const it = items[i], now = Date.now();
     const s = document.createElement('div');
     s.className = 'story in';
