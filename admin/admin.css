@@ -70,3 +70,12 @@ input[type=file]::file-selector-button { background: var(--amber); color: #000; 
 .upbar > div { height: 100%; background: var(--amber); transition: width 0.2s; }
 .up.ok .upbar > div { background: var(--green); }
 .up.erro .upbar > div { background: var(--amber); opacity: 0.4; }
+
+.gif[data-gif] { cursor: context-menu; -webkit-touch-callout: none; user-select: none; }
+.ctxmenu { position: fixed; z-index: 50; min-width: 230px; background: #16181C; border: 1px solid #2A2D33; border-radius: 10px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); display: flex; flex-direction: column; }
+.ctxmenu .ctxtitle { font-size: 11px; color: var(--muted); padding: 4px 10px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.ctxmenu button { background: none; border: 0; border-radius: 6px; text-align: left; padding: 8px 10px; min-height: 36px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ctxmenu button:hover, .ctxmenu button:focus-visible { background: #22252B; outline: none; }
+.ctxmenu .tick { width: 14px; color: var(--amber); }
+.ctxmenu .danger { color: #F87171; }
+.ctxmenu hr { border: 0; border-top: 1px solid #2A2D33; margin: 4px 2px; }

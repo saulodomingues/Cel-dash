@@ -169,11 +169,11 @@ function gifSection() {
   const spots = gifSpots();
   return `
 <section class="card"><h2>GIFs</h2>
-<p class="muted">Sua coleção de GIFs, salva no celular. Escolha onde aparecem em "Onde mostrar", abaixo. Aceita GIF, PNG, JPG ou WEBP, até 20 MB cada.</p>
+<p class="muted">Sua coleção de GIFs, salva no celular. Escolha onde aparecem em "Onde mostrar", abaixo, ou com o botão direito em cada GIF (no celular, segure o dedo). Aceita GIF, PNG, JPG ou WEBP, até 20 MB cada.</p>
 <div class="row"><label>Adicionar GIFs (pode escolher vários de uma vez)<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label></div>
 <div id="uploads">${uploadsHtml()}</div>
 <div class="gallery">${items.map((it) => `
-<figure class="gif">
+<figure class="gif" data-gif="${esc(it.file)}" title="Botão direito (ou segurar no celular): onde mostrar">
 <div class="gifthumb"><img src="/media/${esc(it.file)}" alt="${esc(it.name)}"></div>
 <figcaption><span class="gifname">${esc(it.name)}</span></figcaption>
 <button data-delmedia="${esc(it.file)}" aria-label="Apagar ${esc(it.name)}">Apagar</button>
@@ -376,6 +376,51 @@ function wire() {
     else if (S.config.tela1.clockExtra === 'gif') S.config.tela1.clockExtra = 'calendar';
   };
   const markDirty = () => { dirty = true; render(); };
+  // Menu do botão direito em cada GIF da galeria (no celular: segurar o dedo).
+  app.querySelectorAll('.gif[data-gif]').forEach((fig) => {
+    fig.addEventListener('contextmenu', (e) => { e.preventDefault(); gifMenu(fig.dataset.gif, e.clientX, e.clientY); });
+    let hold;
+    fig.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      hold = setTimeout(() => gifMenu(fig.dataset.gif, e.clientX, e.clientY), 550);
+    });
+    for (const ev of ['pointerup', 'pointercancel', 'pointermove']) fig.addEventListener(ev, () => clearTimeout(hold));
+  });
+  function gifMenu(file, x, y) {
+    closeMenu();
+    const c = S.config;
+    const onClock = c.tela1.clockExtra === 'gif' && c.tela1.clockGif === file;
+    const onClaude = c.claudeView.gif === file;
+    const onFull = c.gif.full === file;
+    const name = c.gif.items.find((i) => i.file === file)?.name || '';
+    const item = (act, label, on) => `<button role="menuitemcheckbox" aria-checked="${on}" data-act="${act}"><span class="tick">${on ? '✓' : ''}</span>${label}</button>`;
+    const m = document.createElement('div');
+    m.className = 'ctxmenu'; m.setAttribute('role', 'menu');
+    m.innerHTML = `<div class="ctxtitle">${esc(name)}</div>
+${item('clock', 'Ao lado do relógio', onClock)}
+${item('claude', 'Ao lado do gráfico do Claude', onClaude)}
+${item('full', 'Na tela cheia', onFull)}
+<hr>
+<button role="menuitem" data-act="del" class="danger"><span class="tick"></span>Apagar</button>`;
+    document.body.appendChild(m);
+    const r = m.getBoundingClientRect();
+    m.style.left = `${Math.max(8, Math.min(x, innerWidth - r.width - 8))}px`;
+    m.style.top = `${Math.max(8, Math.min(y, innerHeight - r.height - 8))}px`;
+    m.querySelector('button').focus();
+    m.addEventListener('click', (e) => {
+      const act = e.target.closest('button')?.dataset.act;
+      if (!act) return;
+      closeMenu();
+      if (act === 'del') return app.querySelector(`[data-delmedia="${CSS.escape(file)}"]`)?.click();
+      // marcar de novo o que já está marcado desliga (relógio volta ao calendário; tela cheia volta a alternar)
+      if (act === 'clock') setClockGif(onClock ? '' : file);
+      if (act === 'claude') c.claudeView.gif = onClaude ? '' : file;
+      if (act === 'full') c.gif.full = onFull ? '*' : file;
+      markDirty();
+      toast('Escolhido. Falta clicar em Salvar e aplicar.');
+    });
+  }
+
   document.getElementById('gifClock').addEventListener('change', (e) => { setClockGif(e.target.value); markDirty(); });
   document.getElementById('gifClaude').addEventListener('change', (e) => { S.config.claudeView.gif = e.target.value; markDirty(); });
   document.getElementById('gifFullPick').addEventListener('change', (e) => { S.config.gif.full = e.target.value; markDirty(); });
@@ -487,5 +532,10 @@ function wire() {
   }));
 }
 
+function closeMenu() { document.querySelectorAll('.ctxmenu').forEach((m) => m.remove()); }
+addEventListener('pointerdown', (e) => { if (!e.target.closest('.ctxmenu')) closeMenu(); }, true);
+addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+addEventListener('scroll', closeMenu, true);
+addEventListener('resize', closeMenu);
 addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
 boot().catch((e) => { app.innerHTML = `<div class="card login"><h1>Painel S20</h1><p class="muted">Não consegui falar com o servidor: ${esc(e.message)}</p></div>`; });
