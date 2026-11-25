@@ -4,7 +4,7 @@ Briefing do projeto. O planejamento foi feito com o Saulo em 24/11/2026; a v1 fo
 
 ## Estado atual
 
-Implementado e testado só no PC (modo demo, `npm test`, navegador de 780×360). **Nada foi rodado no S20 ainda.**
+**Rodando no S20 desde 25/11/2026**, no Chrome, com Termux e Termux:API do F-Droid. Confirmado no aparelho: tempo (Open-Meteo), uso do Claude (login OAuth da assinatura, conta Ultra), GIFs, brilho e bateria/Wi-Fi pelo Termux:API (depois de dar as permissões), atualização automática pelo GitHub.
 
 - Servidor Node sem dependências (`server/`), SSE em `/events` no lugar do WebSocket proposto.
 - Coletores e componentes visuais em `widgets/` (tempo, claude, system; clock só tem visual).
@@ -16,7 +16,9 @@ Implementado e testado só no PC (modo demo, `npm test`, navegador de 780×360).
 
 Navegador do painel (`display.browser`, escolhido em 25/11/2026): **Chrome** por padrão — painel instalável como app (manifest + service worker mínimo, tela cheia, deitado), tela ligada por Wake Lock (só em `http://localhost`), brilho pelo servidor com `termux-brightness` (`server/display.js`, precisa da permissão "Modificar configurações do sistema" no Termux:API), horário de apagar = painel preto. Sem tela ociosa. **Fully** continua disponível como opção (brilho, apagar e movimento pela interface dele).
 
-Não validado: chamadas reais ao Open-Meteo e ao endpoint de uso, Termux:API, interface JavaScript do Fully Kiosk (brilho, apagar, movimento), fator de escala no aparelho. Rode `npm run probe` e abra `/probe` no S20.
+Ainda não validado no aparelho: cotações (AwesomeAPI e Yahoo), interface JavaScript do Fully Kiosk, fator de escala exato (confira em `/probe`).
+
+Lições da instalação: o Termux:API não existe na Play Store (Termux, Termux:API e Termux:Boot têm de vir todos do F-Droid); `pkg upgrade` antes de instalar o Node, senão "CANNOT LINK EXECUTABLE"; no Samsung, a permissão de brilho fica em Aplicativos → ⋮ → Acesso especial → Alterar configurações do sistema; o Wi-Fi precisa de Localização para o Termux:API; abrir/fechar o Termux não liga o servidor (só o Termux:Boot no reinício ou `sh ~/.termux/boot/monitor-mesa.sh &`).
 
 ## Como trabalhar neste projeto
 
