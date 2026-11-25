@@ -92,6 +92,56 @@ function screensList() {
   }).join('');
 }
 
+// ---------- GIFs ----------
+// Onde cada GIF aparece: valor da escolha = '' (não mostrar), '*' (alternar entre todos) ou o arquivo.
+function gifSpots() {
+  const c = S.config;
+  return {
+    clock: c.tela1.clockExtra === 'gif' ? c.tela1.clockGif : '',
+    claude: c.claudeView.gif || '',
+  };
+}
+function gifPlaceSelect(id, label, value) {
+  const items = S.config.gif.items;
+  return `<label>${label}<select id="${id}" ${items.length ? '' : 'disabled'}>
+<option value="" ${!value ? 'selected' : ''}>Não mostrar</option>
+${items.length > 1 ? `<option value="*" ${value === '*' ? 'selected' : ''}>Alternar entre todos</option>` : ''}
+${items.map((i) => `<option value="${esc(i.file)}" ${value === i.file || (value === '*' && items.length === 1) ? 'selected' : ''}>${esc(i.name)}</option>`).join('')}
+</select></label>`;
+}
+function gifSection() {
+  const items = S.config.gif.items;
+  const spots = gifSpots();
+  const full = S.config.screens.find((x) => x.id === 'gif');
+  const badges = (file) => [
+    spots.clock === file || spots.clock === '*' ? 'relógio' : '',
+    spots.claude === file || spots.claude === '*' ? 'Claude' : '',
+    full?.enabled ? 'tela cheia' : '',
+  ].filter(Boolean);
+  return `
+<section class="card"><h2>GIFs</h2>
+<p class="muted">Sua coleção de GIFs, salva no celular. Escolha onde cada um aparece. Aceita GIF, PNG, JPG ou WEBP, até 20 MB cada.</p>
+<div class="row"><label>Adicionar GIFs (pode escolher vários de uma vez)<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label></div>
+<div class="gallery">${items.map((it) => `
+<figure class="gif">
+<div class="gifthumb"><img src="/media/${esc(it.file)}" alt="${esc(it.name)}"></div>
+<figcaption><span class="gifname">${esc(it.name)}</span>${badges(it.file).map((b) => `<span class="badge">${b}</span>`).join('')}</figcaption>
+<div class="row gifbtns"><button data-gifuse="clock:${esc(it.file)}">Usar no relógio</button><button data-gifuse="claude:${esc(it.file)}">Usar no Claude</button><button data-delmedia="${esc(it.file)}" aria-label="Apagar ${esc(it.name)}">Apagar</button></div>
+</figure>`).join('') || '<p class="muted">Nenhum GIF ainda. Adicione acima.</p>'}</div>
+<h2 style="margin-top:16px">Onde mostrar</h2>
+<div class="grid">
+${gifPlaceSelect('gifClock', 'Ao lado do relógio (no lugar do calendário)', spots.clock)}
+${gifPlaceSelect('gifClaude', 'Ao lado do gráfico do Claude (direita)', spots.claude)}
+<label class="check"><input type="checkbox" id="gifFull" ${full?.enabled ? 'checked' : ''} ${items.length ? '' : 'disabled'}>Também como tela cheia na rotação</label>
+<label>Ajuste na tela cheia<select data-path="gif.fit">
+<option value="contain" ${S.config.gif.fit === 'contain' ? 'selected' : ''}>Caber inteiro (faixas pretas)</option>
+<option value="cover" ${S.config.gif.fit === 'cover' ? 'selected' : ''}>Preencher a tela (corta as bordas)</option>
+</select></label>
+</div>
+<p class="muted" style="margin-top:8px">"Alternar entre todos" mostra o próximo GIF a cada vez que a tela volta na rotação. Depois de escolher, clique em Salvar e aplicar.</p>
+</section>`;
+}
+
 const COUNTER_NAMES = { session: ['Sessão de 5 h', 'some sozinho em plano sem esse limite'], model: ['Semana do modelo', 'Fable, ou o escolhido em Claude'], week: ['Semana, todos os modelos', ''] };
 function counterList() {
   const list = S.config.claudeView.counters;
@@ -174,38 +224,23 @@ function render() {
 ${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20" max="3600"')}
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 </div>
-<h2 style="margin-top:16px">GIFs</h2>
-<p class="muted">Use como widget ao lado do relógio (acima, em "Ao lado do relógio") ou como tela cheia (tela "GIF" na rotação; com várias, cada passagem mostra a próxima). GIF, PNG, JPG ou WEBP até 20 MB.</p>
-<div class="row" style="margin-top:8px">
-<label>Adicionar GIFs (pode escolher vários)<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label>
-<label>Ajuste<select data-path="gif.fit">
-<option value="contain" ${S.config.gif.fit === 'contain' ? 'selected' : ''}>Caber inteira (faixas pretas)</option>
-<option value="cover" ${S.config.gif.fit === 'cover' ? 'selected' : ''}>Preencher a tela (corta as bordas)</option>
-</select></label>
-</div>
-<div class="screens" style="margin-top:8px">${S.config.gif.items.map((it) => `
-<div class="screen"><div class="thumb" style="display:flex;align-items:center;justify-content:center"><img src="/media/${esc(it.file)}" alt="" style="max-width:100%;max-height:100%"></div>
-<div class="info"><b>${esc(it.name)}</b></div>
-<div class="moves"><button data-delmedia="${esc(it.file)}">Apagar</button></div></div>`).join('') || '<p class="muted">Nenhuma imagem enviada.</p>'}</div>
 <h2 style="margin-top:16px">Contadores do Claude</h2>
 <p class="muted">Quais aparecem e em que ordem, na tela principal (anéis) e na tela 2 (linha). Cada anel que sai dá o espaço para a estatística.</p>
 <div class="screens">${counterList()}</div>
 <div class="grid" style="margin-top:8px">
 ${field('claudeView.showStats', 'Mostrar últimos 7 dias (tela principal)', 'checkbox')}
 ${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'checkbox')}
-<label>À direita do card do Claude<select data-path="claudeView.gif">
-<option value="" ${!S.config.claudeView.gif ? 'selected' : ''}>Nada</option>
-${S.config.gif.items.length ? `<option value="*" ${S.config.claudeView.gif === '*' ? 'selected' : ''}>GIF, alternando entre todos</option>${S.config.gif.items.map((i) => `<option value="${esc(i.file)}" ${S.config.claudeView.gif === i.file ? 'selected' : ''}>GIF: ${esc(i.name)}</option>`).join('')}` : '<option disabled>GIF (envie um em GIFs, acima)</option>'}
-</select></label>
+
 </div>
 <div class="grid" style="margin-top:12px">
 <label>Ao lado do relógio (tela principal)<select data-path="tela1.clockExtra">
 <option value="calendar" ${S.config.tela1.clockExtra === 'calendar' ? 'selected' : ''}>Calendário do mês com feriados</option>
-<option value="gif" ${S.config.tela1.clockExtra === 'gif' ? 'selected' : ''} ${S.config.gif.items.length ? '' : 'disabled'}>GIF${S.config.gif.items.length ? '' : ' (envie um abaixo)'}</option>
+${S.config.tela1.clockExtra === 'gif' ? '<option value="gif" selected>GIF (escolhido na seção GIFs)</option>' : ''}
 <option value="none" ${S.config.tela1.clockExtra === 'none' ? 'selected' : ''}>Nada (relógio grande)</option>
 </select></label>
-${S.config.tela1.clockExtra === 'gif' && S.config.gif.items.length > 1 ? `<label>Qual GIF ao lado do relógio<select data-path="tela1.clockGif"><option value="*" ${S.config.tela1.clockGif === '*' ? 'selected' : ''}>Alternar entre todos</option>${S.config.gif.items.map((i) => `<option value="${esc(i.file)}" ${i.file === S.config.tela1.clockGif ? 'selected' : ''}>${esc(i.name)}</option>`).join('')}</select></label>` : ''}
 </div></section>
+
+${gifSection()}
 
 <section class="card"><h2>Estado da coleta</h2><p class="muted">Se uma fonte falha, o painel mantém o último dado e segue funcionando.</p>
 <div class="status">${statusRows()}</div></section>
@@ -289,13 +324,29 @@ function wire() {
       const r = await fetch('/api/admin/media', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(f.name) }, body: f });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || `Erro ${r.status}`);
-      S.config.gif = j.config.gif; S.config.screens = j.config.screens;
+      S.config.gif = j.config.gif;
     }
-    render(); toast(files.length > 1 ? `${files.length} imagens enviadas.` : 'Imagem enviada.');
+    e.target.value = '';
+    render(); toast(files.length > 1 ? `${files.length} GIFs adicionados.` : 'GIF adicionado.');
+  }));
+  const setClockGif = (v) => {
+    if (v) { S.config.tela1.clockExtra = 'gif'; S.config.tela1.clockGif = v; }
+    else if (S.config.tela1.clockExtra === 'gif') S.config.tela1.clockExtra = 'calendar';
+  };
+  const markDirty = () => { dirty = true; render(); };
+  document.getElementById('gifClock').addEventListener('change', (e) => { setClockGif(e.target.value); markDirty(); });
+  document.getElementById('gifClaude').addEventListener('change', (e) => { S.config.claudeView.gif = e.target.value; markDirty(); });
+  document.getElementById('gifFull').addEventListener('change', (e) => { S.config.screens.find((x) => x.id === 'gif').enabled = e.target.checked; markDirty(); });
+  app.querySelectorAll('[data-gifuse]').forEach((el) => el.addEventListener('click', () => {
+    const [where, file] = el.dataset.gifuse.split(':');
+    if (where === 'clock') setClockGif(file); else S.config.claudeView.gif = file;
+    markDirty(); toast(`Definido ${where === 'clock' ? 'ao lado do relógio' : 'ao lado do Claude'}. Falta salvar.`);
   }));
   app.querySelectorAll('[data-delmedia]').forEach((el) => el.addEventListener('click', guard(async () => {
+    if (!confirm('Apagar este GIF do celular?')) return;
     const r = await call('DELETE', `/api/admin/media/${el.dataset.delmedia}`);
-    S.config.gif = r.config.gif; render(); toast('Imagem apagada.');
+    S.config.gif = r.config.gif; S.config.tela1 = r.config.tela1; S.config.claudeView.gif = r.config.claudeView.gif;
+    render(); toast('GIF apagado.');
   })));
   app.querySelectorAll('[data-counter]').forEach((el) => el.addEventListener('change', () => {
     S.config.claudeView.counters[Number(el.dataset.counter)].enabled = el.checked;
