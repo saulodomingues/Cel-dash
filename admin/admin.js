@@ -118,6 +118,10 @@ ${field('claude.intervalMin', 'Coletar a cada (min)', 'number', 'min="5" max="18
 ${field('claude.planLabel', 'Rótulo do plano', 'text')}
 </div>
 <p class="muted" style="margin-top:12px">${d ? `Limites por modelo que a sua conta expõe: ${keys.length ? keys.map((k) => `<code>${esc(k)}</code>`).join(' ') : 'nenhum'}. Em uso: ${d.model ? `<code>${esc(d.model.key)}</code>` : 'nenhum (o anel do meio fica sem dados)'}.` : 'Os limites por modelo aparecem aqui depois da primeira leitura.'}</p>
+<details style="margin-top:12px"><summary class="muted" style="cursor:pointer">Resposta bruta da última leitura</summary>
+<p class="muted" style="margin:8px 0">${S.claudeRaw ? `Lida ${ago(S.claudeRaw.at)}. Só percentuais e datas; não contém o token.` : 'Ainda não houve leitura desde que o servidor subiu.'}</p>
+${S.claudeRaw ? `<textarea readonly style="min-height:220px">${esc(JSON.stringify(S.claudeRaw.body, null, 2))}</textarea>` : ''}
+</details>
 <details style="margin-top:12px"><summary class="muted" style="cursor:pointer">Opções avançadas</summary>
 <div class="grid" style="margin-top:12px">
 <label>Origem das credenciais<select data-path="claude.source">

@@ -11,6 +11,7 @@ import * as auth from './auth.js';
 import * as scheduler from './scheduler.js';
 import * as updater from './updater.js';
 import * as claudeAuth from '../widgets/claude/auth.js';
+import * as claudeCollector from '../widgets/claude/collector.js';
 
 const DEMO = process.env.DEMO === '1';
 const MIME = {
@@ -147,7 +148,7 @@ async function api(req, res, url) {
   }
   if (p === '/api/admin/config' && m === 'GET') {
     return send(res, 200, {
-      config: getConfig(), secrets: secretsStatus(), status: scheduler.state, demo: DEMO, update: updater.status,
+      config: getConfig(), secrets: secretsStatus(), status: scheduler.state, demo: DEMO, update: updater.status, claudeRaw: claudeCollector.lastRaw,
       server: { ips: localIps(), port: getConfig().port, uptimeSec: Math.round(process.uptime()), node: process.version },
     });
   }

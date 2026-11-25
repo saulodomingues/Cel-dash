@@ -40,14 +40,19 @@ export function modelKeys(raw) {
   return Object.keys(raw).filter((k) => /^seven_day_[a-z0-9_]+$/.test(k) && k !== 'seven_day_oauth_apps');
 }
 
+// Última resposta bruta do endpoint de uso (só percentuais e datas, sem token), mostrada no /admin.
+export let lastRaw = null;
+
 export function normalize(raw, modelKey = 'auto') {
   const keys = modelKeys(raw);
   let key = null;
   if (modelKey !== 'auto' && modelKey) key = keys.includes(modelKey) ? modelKey : null;
   else key = ['seven_day_fable', ...keys].find((k) => keys.includes(k) && win(raw[k])) || null;
   const short = key ? key.replace('seven_day_', '') : null;
+  // sem sessão de 5 h em andamento a resposta traz five_hour nulo: é 0%, não falta de dado
+  const session = win(raw.five_hour) ?? (raw.seven_day !== undefined ? { pct: 0, resetsAt: null } : null);
   return {
-    session: win(raw.five_hour),
+    session,
     week: win(raw.seven_day),
     model: key && win(raw[key]) ? { ...win(raw[key]), key, label: LABELS[short] || short } : null,
     keys,
@@ -82,7 +87,9 @@ export function sessionCurve(readings, session) {
 
 export async function collect(ctx) {
   const now = Date.now();
-  const n = normalize(await fetchUsage(ctx), ctx.config.claude.modelKey);
+  const raw = await fetchUsage(ctx);
+  lastRaw = { at: now, body: raw };
+  const n = normalize(raw, ctx.config.claude.modelKey);
   if (!n.session && !n.week) throw new Error('A resposta de uso veio sem five_hour e sem seven_day.');
   ctx.history.append('claude', { t: now, s: n.session?.pct ?? null, sr: n.session?.resetsAt ?? null, w: n.week?.pct ?? null, m: n.model?.pct ?? null });
   const readings = ctx.history.read('claude', 8, now);

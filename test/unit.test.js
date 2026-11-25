@@ -47,6 +47,10 @@ test('claude: sem limite por modelo o anel fica sem dados, sem quebrar', () => {
   assert.equal(n.model, null);
   assert.equal(n.week, null);
   assert.deepEqual(n.session, { pct: 0, resetsAt: null });
+  // sem sessão em andamento: five_hour nulo vira 0%, não "sem dados"
+  const idle = claude.normalize({ five_hour: null, seven_day: { utilization: 51, resets_at: '2026-11-30T13:00:00Z' } });
+  assert.deepEqual(idle.session, { pct: 0, resetsAt: null });
+  assert.equal(idle.week.pct, 51);
 });
 
 test('claude: uso diário soma os aumentos e trata a renovação semanal', () => {

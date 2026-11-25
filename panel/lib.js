@@ -29,7 +29,7 @@ export function ago(w, now) {
 }
 
 export function resetText(resetsAt, now) {
-  if (!resetsAt) return 'sem janela ativa';
+  if (!resetsAt) return 'não iniciada';
   const left = resetsAt - now;
   if (left <= 0) return 'renovando';
   if (left < 24 * 3600_000) return `renova em ${dur(left)}`;
