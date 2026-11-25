@@ -9,14 +9,28 @@ export const intervalMs = (cfg) => cfg.system.intervalSec * 1000;
 
 const samples = []; // latência: uma amostra por coleta, última hora
 
+// Comando do Termux:API. Cada falha por falta de permissão faz o Android mostrar um aviso por
+// cima do painel; por isso, depois de uma falha, o comando fica 30 min sem ser chamado.
+const pausedUntil = new Map();
+export const apiErrors = {}; // cmd -> mensagem, mostrada no /admin
 function termux(cmd) {
+  if (Date.now() < (pausedUntil.get(cmd) || 0)) return Promise.resolve(null);
   return new Promise((resolve) => {
     execFile(cmd, [], { timeout: 8000 }, (err, stdout) => {
-      if (err) return resolve(null); // Termux:API ausente ou sem permissão: campo fica "—"
-      try { resolve(JSON.parse(stdout)); } catch { resolve(null); }
+      let j = null;
+      if (!err) { try { j = JSON.parse(stdout); } catch { /* saída vazia */ } }
+      // o Termux:API responde {"API_ERROR": "..."} quando falta permissão
+      if (err || !j || j.API_ERROR) {
+        pausedUntil.set(cmd, Date.now() + 30 * 60_000);
+        apiErrors[cmd] = err?.code === 'ENOENT' ? 'Termux:API não instalado' : j?.API_ERROR || (err?.killed ? 'o app Termux:API não respondeu' : 'sem permissão ou sem resposta');
+        return resolve(null); // campo fica "—"
+      }
+      delete apiErrors[cmd];
+      resolve(j);
     });
   });
 }
+export function retryApi() { pausedUntil.clear(); }
 
 // Tempo de abertura de uma conexão TCP, em ms; null se não conectar.
 export function tcpPing(host, port, timeout = 3000) {
@@ -67,6 +81,7 @@ export async function collect({ config }) {
     online: ms !== null,
     vpn: sys.vpn.host ? { label: sys.vpn.label, online: vpnMs !== null } : null,
     latency: { last: ms, samples: [...samples] },
+    apiErrors: { ...apiErrors },
   };
 }
 

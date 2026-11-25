@@ -8,6 +8,9 @@ import { getConfig } from './config.js';
 import { inRange } from '../panel/burnin.js';
 
 export const status = { level: null, at: null, error: null, enabled: false };
+// Depois de uma falha (ex.: sem permissão), só tenta de novo em 30 min: cada tentativa
+// faz o Android mostrar um aviso por cima do painel.
+let retryAt = 0;
 
 export function target(now, cfg) {
   if (cfg.sleep.enabled && inRange(now, cfg.sleep.start, cfg.sleep.end)) return 0;
@@ -33,10 +36,12 @@ export async function apply(force = false) {
   if (!status.enabled) { status.level = null; status.error = null; return; }
   const level = target(Date.now(), cfg);
   if (!force && level === status.level && !status.error) return;
+  if (!force && status.error && Date.now() < retryAt) return;
   try {
     await run(level);
     Object.assign(status, { level, at: Date.now(), error: null });
   } catch (e) {
+    retryAt = Date.now() + 30 * 60_000;
     Object.assign(status, { level: null, at: Date.now(), error: e.message });
   }
 }

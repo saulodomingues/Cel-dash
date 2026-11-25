@@ -211,6 +211,7 @@ async function api(req, res, url) {
     return send(res, 200, { secrets: secretsStatus() });
   }
   if (p.startsWith('/api/admin/collect/') && m === 'POST') {
+    if (p.endsWith('/system')) (await import('../widgets/system/collector.js')).retryApi();
     const st = await scheduler.refresh(p.split('/').pop());
     return send(res, 200, st);
   }

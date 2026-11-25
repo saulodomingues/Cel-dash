@@ -266,6 +266,14 @@ ${field('claude.credentialsFile', 'Arquivo de credenciais', 'text')}
 </details>`;
 }
 
+function apiInfo() {
+  const e = S.status.system?.data?.apiErrors || {};
+  const names = { 'termux-battery-status': 'bateria', 'termux-wifi-connectioninfo': 'Wi-Fi' };
+  const list = Object.entries(e);
+  if (!list.length) return '';
+  return `<p class="err" style="margin-bottom:12px">Termux:API: ${list.map(([k, v]) => `${names[k] || k}: ${esc(v)}`).join(' · ')}. Depois de corrigir, clique em "Coletar agora" em Sistema do S20 (Estado da coleta). O Wi-Fi precisa da permissão de <b>Localização</b> para o app Termux:API e da localização ligada.</p>`;
+}
+
 function displayInfo() {
   const d = S.display || {};
   if (d.error) return `<span class="err">Brilho pelo Termux: ${esc(d.error)}</span> Se for permissão: Configurações do Android → Apps → Termux:API → "Modificar configurações do sistema" → permitir.`;
@@ -355,6 +363,7 @@ ${field('pixelShift.maxPx', 'Deslocamento máximo (px)', 'number', 'min="0" max=
 </div></section>
 
 <section class="card"><h2>Sistema</h2><p class="muted">Bateria e Wi-Fi vêm do Termux:API. O limite de carga é só o número exibido; quem limita é a proteção de bateria do Android.</p>
+${apiInfo()}
 <div class="grid">
 ${field('system.chargeLimit', 'Limite de carga exibido (%; 0 = ocultar)', 'number', 'min="0" max="100"')}
 ${field('system.intervalSec', 'Coletar a cada (s)', 'number', 'min="30" max="600"')}
