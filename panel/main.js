@@ -17,7 +17,7 @@ const PREVIEW = qs.has('preview');     // usado pelo /admin: sem toque, sem burn
 
 const stage = document.getElementById('stage');
 const blackout = document.getElementById('blackout');
-const st = { gifIndex: 0, lastHtml: '', config: null, data: {}, current: null, mode: 'on', lastMinute: -1, lastRotate: Date.now(), fading: false };
+const st = { gifIndex: 0, visit: 0, lastHtml: '', config: null, data: {}, current: null, mode: 'on', lastMinute: -1, lastRotate: Date.now(), fading: false };
 
 const enabled = () => {
   if (PINNED && SCREENS[PINNED]) return [PINNED];
@@ -30,9 +30,17 @@ function render() {
   const now = Date.now();
   const fn = st.mode === 'idle' ? idle : SCREENS[st.current] || tela1;
   try {
-    const html = fn({ data: st.data, config: st.config, now, gifIndex: st.gifIndex });
+    const html = fn({ data: st.data, config: st.config, now, gifIndex: st.gifIndex, visit: st.visit });
     // não recria o que não mudou: senão o GIF recomeçaria a cada atualização de dado
-    if (html !== st.lastHtml) { stage.innerHTML = html; st.lastHtml = html; }
+    if (html !== st.lastHtml) {
+      // imagens marcadas com data-keep (GIFs) voltam as mesmas: a animação segue sem reiniciar
+      const keep = new Map([...stage.querySelectorAll('img[data-keep]')].map((i) => [i.getAttribute('src'), i]));
+      stage.innerHTML = html; st.lastHtml = html;
+      for (const n of stage.querySelectorAll('img[data-keep]')) {
+        const old = keep.get(n.getAttribute('src'));
+        if (old) { old.setAttribute('style', n.getAttribute('style') || ''); n.replaceWith(old); keep.delete(n.getAttribute('src')); }
+      }
+    }
   } catch (e) {
     // um widget com dado inesperado não pode deixar a tela em branco
     console.error(e);
@@ -54,6 +62,7 @@ function show(id) {
   stage.style.opacity = '0';
   setTimeout(() => {
     if (id === 'gif' && st.current !== 'gif') st.gifIndex++;
+    if (id !== st.current) st.visit++;
     st.current = id;
     render();
     stage.style.opacity = '1';

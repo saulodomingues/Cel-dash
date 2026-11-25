@@ -18,10 +18,10 @@ export const DEFAULTS = {
     { id: 'tela1', enabled: true },
     { id: 'tela2', enabled: true },
     { id: 'tela3', enabled: true },
-    { id: 'gif', enabled: true }, // só entra na rotação se houver imagem enviada
+    { id: 'gif', enabled: false }, // tela cheia de GIF: desligada por padrão; só entra na rotação se houver imagem
   ],
   gif: { items: [], fit: 'contain' }, // items: [{ file, name }] em data/media
-  tela1: { clockExtra: 'calendar' }, // 'calendar' | 'none'
+  tela1: { clockExtra: 'calendar', clockGif: '*' }, // clockExtra: 'calendar' | 'gif' | 'none'; clockGif: arquivo em data/media ou '*' = alterna entre todos
   // contadores do Claude nas telas 1 e 2: quais e em que ordem; estatística de 7 dias na tela 1
   claudeView: {
     counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }],
@@ -80,7 +80,7 @@ function sanitize(c) {
     seen.add(s.id);
     screens.push({ id: s.id, enabled: s.enabled !== false });
   }
-  for (const id of known) if (!seen.has(id)) screens.push({ id, enabled: true });
+  for (const id of known) if (!seen.has(id)) screens.push({ id, enabled: DEFAULTS.screens.find((d) => d.id === id).enabled });
   c.screens = screens;
   const ids = ['session', 'model', 'week'], got = [];
   for (const x of c.claudeView.counters) if (x && ids.includes(x.id) && !got.some((g) => g.id === x.id)) got.push({ id: x.id, enabled: x.enabled !== false });
@@ -89,7 +89,8 @@ function sanitize(c) {
   c.claudeView.counters = got;
   c.gif.fit = c.gif.fit === 'cover' ? 'cover' : 'contain';
   c.gif.items = c.gif.items.filter((i) => i && /^[a-f0-9]{16}\.(gif|png|jpg|webp)$/.test(i.file)).map((i) => ({ file: i.file, name: String(i.name || i.file).slice(0, 80) }));
-  c.tela1.clockExtra = ['calendar', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
+  c.tela1.clockExtra = ['calendar', 'gif', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
+  if (c.tela1.clockGif !== '*' && !c.gif.items.some((i) => i.file === c.tela1.clockGif)) c.tela1.clockGif = '*';
   c.port = clamp(Math.round(c.port), 1024, 65535);
   c.city.lat = clamp(c.city.lat, -90, 90);
   c.city.lon = clamp(c.city.lon, -180, 180);

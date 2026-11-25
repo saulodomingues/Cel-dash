@@ -174,10 +174,10 @@ function render() {
 ${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20" max="3600"')}
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 </div>
-<h2 style="margin-top:16px">GIF</h2>
-<p class="muted">A tela "GIF" mostra só a imagem, sobre preto. Com várias, cada passagem mostra a próxima. GIF, PNG, JPG ou WEBP até 20 MB.</p>
+<h2 style="margin-top:16px">GIFs</h2>
+<p class="muted">Use como widget ao lado do relógio (acima, em "Ao lado do relógio") ou como tela cheia (tela "GIF" na rotação; com várias, cada passagem mostra a próxima). GIF, PNG, JPG ou WEBP até 20 MB.</p>
 <div class="row" style="margin-top:8px">
-<label>Enviar imagem<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label>
+<label>Adicionar GIFs (pode escolher vários)<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label>
 <label>Ajuste<select data-path="gif.fit">
 <option value="contain" ${S.config.gif.fit === 'contain' ? 'selected' : ''}>Caber inteira (faixas pretas)</option>
 <option value="cover" ${S.config.gif.fit === 'cover' ? 'selected' : ''}>Preencher a tela (corta as bordas)</option>
@@ -197,8 +197,10 @@ ${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'che
 <div class="grid" style="margin-top:12px">
 <label>Ao lado do relógio (tela principal)<select data-path="tela1.clockExtra">
 <option value="calendar" ${S.config.tela1.clockExtra === 'calendar' ? 'selected' : ''}>Calendário do mês com feriados</option>
+<option value="gif" ${S.config.tela1.clockExtra === 'gif' ? 'selected' : ''} ${S.config.gif.items.length ? '' : 'disabled'}>GIF${S.config.gif.items.length ? '' : ' (envie um abaixo)'}</option>
 <option value="none" ${S.config.tela1.clockExtra === 'none' ? 'selected' : ''}>Nada (relógio grande)</option>
 </select></label>
+${S.config.tela1.clockExtra === 'gif' && S.config.gif.items.length > 1 ? `<label>Qual GIF ao lado do relógio<select data-path="tela1.clockGif"><option value="*" ${S.config.tela1.clockGif === '*' ? 'selected' : ''}>Alternar entre todos</option>${S.config.gif.items.map((i) => `<option value="${esc(i.file)}" ${i.file === S.config.tela1.clockGif ? 'selected' : ''}>${esc(i.name)}</option>`).join('')}</select></label>` : ''}
 </div></section>
 
 <section class="card"><h2>Estado da coleta</h2><p class="muted">Se uma fonte falha, o painel mantém o último dado e segue funcionando.</p>
@@ -269,6 +271,7 @@ function wire() {
   app.querySelectorAll('[data-path]').forEach((el) => el.addEventListener('change', () => {
     const p = el.dataset.path;
     set(p, el.type === 'checkbox' ? el.checked : el.type === 'number' ? Number(el.value) : el.value);
+    if (p === 'tela1.clockExtra') render();
   }));
   app.querySelectorAll('[data-screen]').forEach((el) => el.addEventListener('change', () => {
     S.config.screens[Number(el.dataset.screen)].enabled = el.checked;

@@ -89,9 +89,11 @@ Todos os números dos mocks são de exemplo.
 - Fontes: Space Grotesk para números, Inter para o resto. Os mocks carregam do Google Fonts; no aparelho, sirva as fontes localmente para funcionar sem internet.
 - Margem externa de 12 px na tela 1: é a folga do pixel shift.
 
-## Tela GIF
+## GIFs
 
-Quarta tela (`gif`): só uma imagem animada em tela cheia sobre preto. Envio em `/admin` → Telas (GIF, PNG, JPG ou WEBP até 20 MB, conferido pelo conteúdo), guardado em `data/media`, servido em `/media/<hex>.<ext>`. Várias imagens: cada passagem pela tela mostra a próxima. Ajuste caber/preencher. Só entra na rotação se houver imagem. O painel não recria o HTML quando nada mudou, para o GIF não reiniciar a cada dado novo.
+Biblioteca de GIFs enviada pelo `/admin` (vários de uma vez), salva em `data/media`. Uso como **widget** ao lado do relógio na tela 1 (`tela1.clockExtra = 'gif'`, `clockGif` = um arquivo ou `'*'` para alternar entre todos a cada passagem pela tela; `widgets/gif/view.js`) e, opcionalmente, como tela cheia. O painel reaproveita o mesmo `<img data-keep>` entre redesenhos, para a animação não reiniciar.
+
+Tela cheia: quinta opção da rotação, desligada por padrão. Quarta tela (`gif`): só uma imagem animada em tela cheia sobre preto. Envio em `/admin` → Telas (GIF, PNG, JPG ou WEBP até 20 MB, conferido pelo conteúdo), guardado em `data/media`, servido em `/media/<hex>.<ext>`. Várias imagens: cada passagem pela tela mostra a próxima. Ajuste caber/preencher. Só entra na rotação se houver imagem. O painel não recria o HTML quando nada mudou, para o GIF não reiniciar a cada dado novo.
 
 ## Contadores do Claude
 
