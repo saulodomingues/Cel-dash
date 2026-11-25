@@ -42,5 +42,6 @@ export const SG = "font-family: 'Space Grotesk', sans-serif";
 export const LABEL = 'font-size: 11px; color: #9AA0A6; letter-spacing: 0.04em';
 
 // Título de card com "atualizado há…" logo depois, em letra menor e mais apagada.
-export const cardHead = (title, w, now) =>
-  `<div style="display: flex; align-items: baseline; gap: 8px; ${LABEL}"><span>${title}</span><span style="font-size: 9px; color: #6B7078; letter-spacing: 0.02em">${ago(w, now)}</span></div>`;
+// `right`: HTML opcional na ponta direita do cabeçalho (ex.: status online · IP).
+export const cardHead = (title, w, now, right = '') =>
+  `<div style="display: flex; align-items: baseline; gap: 8px; ${LABEL}"><span>${title}</span><span style="font-size: 9px; color: #6B7078; letter-spacing: 0.02em">${ago(w, now)}</span>${right ? `<span style="margin-left: auto; align-self: center">${right}</span>` : ''}</div>`;

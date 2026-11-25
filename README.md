@@ -69,7 +69,7 @@ Isso só vale com o servidor iniciado pelo `scripts/run.sh` (é o que a instala�
 
 ## Uso
 
-- Toque na tela: próxima tela. Toque no IP (canto de cima, à direita, na tela principal) ou segurar 1,5 s em qualquer lugar: abre o `/admin` no próprio celular.
+- Toque na tela: próxima tela. Toque no "online · IP" (à direita no cabeçalho do card do Claude, na tela principal) ou segurar 1,5 s em qualquer lugar: abre o `/admin` no próprio celular.
 - Primeiro acesso ao `/admin`: cria a senha. Faça isso logo depois de instalar; até lá, qualquer aparelho da rede pode criá-la.
 - Salvar no `/admin` atualiza o painel na hora (SSE).
 

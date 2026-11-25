@@ -1,5 +1,5 @@
 // Tela 1, principal: relógio e tempo em cima, Claude embaixo. Única com cards.
-import { clockCard } from '/widgets/clock/view.js';
+import { clockCard, statusBadge } from '/widgets/clock/view.js';
 import { weatherCard } from '/widgets/weather/view.js';
 import { claudeCard } from '/widgets/claude/view.js';
 import { clockMood, skyMood } from '/panel/mood.js';
@@ -14,8 +14,8 @@ export function tela1({ data, config, now, visit = 0 }) {
   const sky = skyMood(data.weather?.data?.current?.icon);
   return `
 <div style="width: 780px; height: 360px; box-sizing: border-box; padding: 12px; background: #000000; color: #E8EAED; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px">
-<section style="grid-column: span 2; ${CARD}; background: ${clk.bg}; border-color: ${clk.border}; justify-content: space-between">${clockCard(now, config.city.name, data.system, clk.digits, config.tela1?.clockExtra === 'calendar' ? miniCalendar(now, clk.digits) : config.tela1?.clockExtra === 'quotes' ? quotesWidget(data.quotes, now) : config.tela1?.clockExtra === 'gif' ? gifWidget(config, config.tela1.clockGif, { width: 120, visit }) : '')}</section>
+<section style="grid-column: span 2; ${CARD}; background: ${clk.bg}; border-color: ${clk.border}; justify-content: space-between">${clockCard(now, config.city.name, clk.digits, config.tela1?.clockExtra === 'calendar' ? miniCalendar(now, clk.digits, 1.2) : config.tela1?.clockExtra === 'quotes' ? quotesWidget(data.quotes, now) : config.tela1?.clockExtra === 'gif' ? gifWidget(config, config.tela1.clockGif, { width: 120, visit }) : '')}</section>
 <section style="grid-column: span 2; ${CARD}; background: ${sky.bg}; border-color: ${sky.border}; gap: 6px">${weatherCard(data.weather, now, sky.chip)}</section>
-<section style="grid-column: span 4; ${CARD}; gap: 10px">${claudeCard(data.claude, now, config.claude.planLabel, config.claudeView, config.claudeView?.gif ? gifWidget(config, config.claudeView.gif, { width: 124, visit: visit + 1 }) : '')}</section>
+<section style="grid-column: span 4; ${CARD}; gap: 10px">${claudeCard(data.claude, now, config.claude.planLabel, config.claudeView, config.claudeView?.gif ? gifWidget(config, config.claudeView.gif, { width: 124, visit: visit + 1 }) : '', statusBadge(data.system))}</section>
 </div>`;
 }

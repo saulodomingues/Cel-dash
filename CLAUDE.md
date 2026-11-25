@@ -72,7 +72,7 @@ O aparelho é um **Galaxy S20** (o briefing original dizia S22 por engano; os mo
 Arquivos: `mocks/telaN.html` (HTML estático, abre direto no navegador) e `mocks/telaN.png`.
 
 **Tela 1: principal**
-- Linha de cima: relógio grande com data (esquerda, com status online e IP do aparelho) e tempo (direita: atual, sensação, chuva, vento, previsão de 5 dias).
+- Linha de cima: relógio grande com data (esquerda; o status "online · IP", que abre o `/admin` ao toque, foi para a direita do cabeçalho do card do Claude em 25/11/2026) e tempo (direita: atual, sensação, chuva, vento, previsão de 5 dias).
 - Linha de baixo, card inteiro "Claude · assinatura Max": três anéis na ordem **sessão de 5 h, semana do Fable, semana de todos os modelos**, cada um com percentual no centro e quando renova; à direita, barras dos últimos 7 dias.
 
 **Tela 2: tempo em detalhe** (layout D, aprovado em 25/11/2026; substitui o mock original)
@@ -110,7 +110,7 @@ Terceira opção do espaço ao lado do relógio (`tela1.clockExtra = 'quotes'`),
 
 ## Calendário ao lado do relógio (tela 1)
 
-Escolhido em 25/11/2026 para o espaço livre do card do relógio. `widgets/calendar/`: mês com hoje marcado, feriados nacionais em vermelho e pontos facultativos (Carnaval, Corpus Christi) em lilás, e a linha "próximo feriado". Feriados calculados no aparelho (Páscoa por Meeus), sem internet. Com ele o relógio cai de 84 para 64 px. Liga/desliga em `/admin` → Telas (`tela1.clockExtra`). Módulos de widget que o navegador precisa além do `view.js` se chamam `*.shared.js`.
+Escolhido em 25/11/2026 para o espaço livre do card do relógio. `widgets/calendar/`: mês com hoje marcado, feriados nacionais em vermelho e pontos facultativos (Carnaval, Corpus Christi) em lilás, e a linha "próximo feriado". Feriados calculados no aparelho (Páscoa por Meeus), sem internet. Com ele o relógio cai de 84 para 64 px. O widget do lado direito ocupa a altura toda do card (calendário em escala 1,2: 134 px de largura). Liga/desliga em `/admin` → Telas (`tela1.clockExtra`). Módulos de widget que o navegador precisa além do `view.js` se chamam `*.shared.js`.
 
 ## Cor (opção C, escolhida em 25/11/2026)
 

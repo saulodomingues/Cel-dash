@@ -74,8 +74,8 @@ export function pickCounters(d, view = DEFAULT_VIEW) {
 
 // Tela 1: card inteiro.
 // `right`: HTML opcional na ponta direita do card (ex.: GIF), numa coluna de largura fixa.
-export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '') {
-  const head = cardHead(`Claude${planLabel ? ` · ${esc(planLabel)}` : ''}`, w, now);
+export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '', headRight = '') {
+  const head = cardHead(`Claude${planLabel ? ` · ${esc(planLabel)}` : ''}`, w, now, headRight);
   const d = w?.data;
   if (!d) {
     const msg = noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'sem dados');
