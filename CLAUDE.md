@@ -91,13 +91,13 @@ Todos os números dos mocks são de exemplo.
 
 ## GIFs
 
-Seção própria "GIFs" no `/admin`: envio de vários de uma vez, galeria com prévia animada, 4 por linha (2 no celular), só com o botão "Apagar" e "Onde mostrar" (relógio, Claude, tela cheia). Salvos em `data/media`. Uso como **widget** ao lado do relógio na tela 1 (`tela1.clockExtra = 'gif'`, `clockGif` = um arquivo ou `'*'` para alternar entre todos a cada passagem pela tela; `widgets/gif/view.js`) à direita do card do Claude na tela 1 (`claudeView.gif`, mesmos valores; coluna fixa de 124 px; quando a coluna de cada anel fica abaixo de ~170 px os anéis passam ao formato compacto, com o texto embaixo) e, opcionalmente, como tela cheia. O painel reaproveita o mesmo `<img data-keep>` entre redesenhos, para a animação não reiniciar.
+Seção própria "GIFs" no `/admin`: envio de vários de uma vez, galeria com prévia animada, 4 por linha (2 no celular), só com o botão "Apagar" e "Onde mostrar" (relógio, Claude, tela cheia). Salvos em `data/media`. Uso como **widget** ao lado do relógio na tela 1 (`tela1.clockExtra = 'gif'`, `clockGif` = um arquivo ou `'*'` para alternar entre todos a cada passagem pela tela; `widgets/gif/view.js`) à direita do card do Claude na tela 1 (`claudeView.gif`, mesmos valores; coluna fixa de 124 px) e, opcionalmente, como tela cheia. O painel reaproveita o mesmo `<img data-keep>` entre redesenhos, para a animação não reiniciar.
 
 Tela cheia: quinta opção da rotação, desligada por padrão. Quarta tela (`gif`): só uma imagem animada em tela cheia sobre preto. Envio em `/admin` → Telas (GIF, PNG, JPG ou WEBP até 20 MB, conferido pelo conteúdo), guardado em `data/media`, servido em `/media/<hex>.<ext>`. Várias imagens: cada passagem pela tela mostra a próxima. Ajuste caber/preencher. Só entra na rotação se houver imagem. O painel não recria o HTML quando nada mudou, para o GIF não reiniciar a cada dado novo.
 
 ## Contadores do Claude
 
-`config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, nas telas 1 (anéis) e 2 (linha); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 o card tem 4 espaços: cada anel ocupa 1 e a estatística fica com 0,8 + o espaço dos anéis que saíram; sempre 7 dias, barras mais largas. O card nunca fica vazio.
+`config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, nas telas 1 (anéis) e 2 (linha); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 os 7 dias são barras deitadas (um dia por linha, hoje por último em âmbar, valor = % do limite semanal gasto no dia, sem título) numa coluna fixa (170 px; 150 com 3 anéis; 140 com GIF); os anéis dividem o resto. Com 1 ou 2 anéis eles crescem (108 px, 96 com GIF); com 3 ficam em 78 px; coluna abaixo de 170 px vira formato compacto. O card nunca fica vazio.
 
 ## Calendário ao lado do relógio (tela 1)
 

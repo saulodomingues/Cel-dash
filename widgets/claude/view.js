@@ -7,7 +7,7 @@ const C = 226.2; // circunferência do anel (r = 36)
 const clampPct = (v) => Math.max(0, Math.min(100, v));
 
 // compact: anel menor com o texto embaixo, para quando a coluna fica estreita (ex.: com GIF no card).
-function ring(win, base, title, sub, now, windowMs, center = false, compact = false) {
+function ring(win, base, title, sub, now, windowMs, center = false, compact = false, size = 78) {
   const has = win && typeof win.pct === 'number';
   const mood = usageMood(win, base, windowMs, now);
   const color = mood.color;
@@ -27,36 +27,32 @@ ${arc(66)}
 <div style="font-size: 10.5px; color: #9AA0A6; white-space: nowrap">${note}</div>
 </div>`;
   }
+  const big = size > 90; // anéis grandes (1 ou 2 contadores): texto maior também
   return `
-<div style="display: flex; align-items: center; justify-content: ${center ? 'center' : 'flex-start'}; gap: 8px; min-width: 0">
-<svg role="img" aria-label="${esc(title)} ${esc(sub)}: ${has ? pct(win.pct) : 'sem dados'}" width="78" height="78" viewBox="0 0 84 84" style="flex: none">
-<circle cx="42" cy="42" r="36" fill="none" stroke="#1C1E22" stroke-width="7"/>
-${dash > 0.5 ? `<circle cx="42" cy="42" r="36" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C}" transform="rotate(-90 42 42)"/>` : ''}
-<text x="42" y="49" text-anchor="middle" fill="${has ? '#E8EAED' : '#9AA0A6'}" font-family="'Space Grotesk', sans-serif" font-size="21" font-weight="500">${has ? pct(win.pct) : '—'}</text>
-</svg>
+<div style="display: flex; align-items: center; justify-content: ${center ? 'center' : 'flex-start'}; gap: ${big ? 14 : 8}px; min-width: 0">
+${arc(size)}
 <div style="min-width: 0">
-<div style="font-size: 13px; color: #E8EAED; font-weight: 500">${esc(title)}</div>
-<div style="font-size: 11px; color: #C4C7CC; white-space: nowrap">${esc(sub)}</div>
-<div style="font-size: 11px; color: #9AA0A6; margin-top: 6px; white-space: nowrap">${note}</div>
+<div style="font-size: ${big ? 16 : 13}px; color: #E8EAED; font-weight: 500">${esc(title)}</div>
+<div style="font-size: ${big ? 13 : 11}px; color: #C4C7CC; white-space: nowrap">${esc(sub)}</div>
+<div style="font-size: ${big ? 12.5 : 11}px; color: #9AA0A6; margin-top: ${big ? 8 : 6}px; white-space: nowrap">${note}</div>
 </div>
 </div>`;
 }
 
-function bars7(days) {
+// Uso diário dos últimos 7 dias em barras deitadas: um dia por linha, hoje por último em âmbar.
+// O valor é quanto do limite semanal foi gasto naquele dia.
+function barsH(days) {
   const max = Math.max(...days.map((d) => d.value), 0);
-  const cols = days.map((d, i) => {
+  const val = (v) => (v > 0 && v < 1 ? '<1%' : `${Math.round(v)}%`);
+  const rows = days.map((d, i) => {
     const today = i === days.length - 1;
-    const h = max > 0 ? Math.max(4, (d.value / max) * 100) : 4;
-    return `<div style="height: ${h.toFixed(0)}%; background: ${today ? AMBER : '#2A2D33'}; border-radius: 3px"></div>`;
+    const w = max > 0 && d.value > 0 ? Math.max(3, (d.value / max) * 100) : 0;
+    return `<span style="font-size: 10.5px; color: ${today ? '#E8EAED' : '#9AA0A6'}; text-align: right">${today ? 'hoje' : WD[new Date(d.t).getDay()]}</span>
+<div style="height: 7px; border-radius: 3px; background: #1C1E22; overflow: hidden"><div style="width: ${w.toFixed(0)}%; height: 100%; border-radius: 3px; background: ${today ? AMBER : '#3A3D44'}"></div></div>
+<span style="font-size: 10px; color: ${today ? '#E8EAED' : '#6B7078'}; ${SG}">${val(d.value)}</span>`;
   }).join('\n');
-  const letters = days.map((d, i) => `<span${i === days.length - 1 ? ' style="color: #E8EAED"' : ''}>${WD[new Date(d.t).getDay()][0]}</span>`).join('');
-  return `
-<div style="display: flex; flex-direction: column; justify-content: space-between">
-<div style="font-size: 12px; color: #C4C7CC">Últimos 7 dias</div>
-<div role="img" aria-label="Uso diário nos últimos sete dias" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; align-items: end; height: 58px">
-${cols}
-</div>
-<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; font-size: 11px; color: #9AA0A6; text-align: center">${letters}</div>
+  return `<div role="img" aria-label="Uso diário nos últimos sete dias" style="display: grid; grid-template-columns: auto minmax(0, 1fr) 28px; column-gap: 8px; row-gap: 3px; align-items: center; align-content: center; min-width: 0; height: 100%">
+${rows}
 </div>`;
 }
 
@@ -86,28 +82,19 @@ export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '') {
   }
   const rings = pickCounters(d, view);
   const stats = view.showStats !== false || rings.length === 0; // o card nunca fica vazio
-  // 4 espaços: cada anel ocupa 1; a estatística fica com 0,8 mais o espaço de cada anel que saiu
-  // Sem GIF: 4 espaços; cada anel ocupa 1 e a estatística fica com 0,8 + o espaço dos anéis que saíram.
-  // Com GIF: os anéis mantêm a largura que teriam sem ele e o GIF tira espaço só da estatística.
-  // Se não sobrar o mínimo para a estatística, aí sim os anéis ficam compactos.
-  const W = 722, GAP = 14, GIF = 124, STATS_MIN = 150;
-  const fr = rings.length + (stats ? 3 - rings.length + 0.8 : 0);
-  const ringW = (W - GAP * (rings.length + (stats ? 1 : 0) - 1)) / fr; // largura de cada anel sem o GIF
-  let cols, compact = false;
-  if (!right) {
-    cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : [])];
-  } else if (stats && W - GIF - GAP * (rings.length + 1) - ringW * rings.length >= STATS_MIN) {
-    cols = [...rings.map(() => `${Math.floor(ringW)}px`), 'minmax(0, 1fr)', `${GIF}px`];
-  } else {
-    cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : []), `${GIF}px`];
-    const items = rings.length + (stats ? 1 : 0) + 1;
-    compact = rings.length > 0 && (W - GIF - GAP * (items - 1)) / fr < 170; // abaixo de ~170 px o texto ao lado não cabe
-  }
-  cols = cols.join(' ');
+  // A estatística (barras deitadas) tem largura fixa e o GIF também; os anéis dividem o resto.
+  // Com 1 ou 2 anéis eles crescem; se a coluna de cada anel ficar estreita, viram compactos (texto embaixo).
+  const W = 722, GAP = 14, GIF = right ? 124 : 0;
+  const STATS = !stats ? 0 : !rings.length ? W - GIF - (right ? GAP : 0) : right ? 140 : rings.length >= 3 ? 150 : 170;
+  const n = rings.length;
+  const colW = n ? (W - STATS - GIF - GAP * (n + (stats ? 1 : 0) + (right ? 1 : 0) - 1)) / n : 0;
+  const compact = n > 0 && colW < 170;
+  const size = n <= 2 ? (right ? 96 : 108) : 78;
+  const cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`${STATS}px`] : []), ...(right ? [`${GIF}px`] : [])].join(' ');
   return `${head}
 <div style="display: grid; grid-template-columns: ${cols}; gap: 14px; flex: 1; min-height: 0">
-${rings.map((c) => ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats, compact)).join('\n')}
-${stats ? bars7(d.days) : ''}
+${rings.map((c) => ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats || n === 1, compact, size)).join('\n')}
+${stats ? barsH(d.days) : ''}
 ${right}
 </div>`;
 }
