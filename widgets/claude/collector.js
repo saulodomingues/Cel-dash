@@ -34,7 +34,7 @@ const win = (o) => (o && typeof o.utilization === 'number' ? { pct: o.utilizatio
 // Item da lista "limits" (formato novo): { kind, group, percent | utilization, resets_at, scope: { model: { display_name } } }
 const limitWin = (l) => {
   const p = typeof l?.percent === 'number' ? l.percent : typeof l?.utilization === 'number' ? l.utilization : null;
-  return p === null ? null : { pct: p, resetsAt: toMs(l.resets_at) };
+  return p === null ? null : { pct: p, resetsAt: toMs(l.resets_at), ...(l.severity ? { severity: l.severity } : {}) };
 };
 
 const LABELS = { fable: 'Fable', opus: 'Opus', sonnet: 'Sonnet', haiku: 'Haiku' };
@@ -68,7 +68,9 @@ export function normalize(raw, modelKey = 'auto') {
     : models.find((m) => /^fable\b/i.test(m.label)) || models[0] || null;
   // five_hour nulo e nenhum limite "session" na lista: o plano não tem limite de 5 h (ex.: Ultra)
   const session = win(raw.five_hour) ?? find('session') ?? (raw.five_hour === null || limits.length ? { pct: null, resetsAt: null, unlimited: true } : null);
-  return { session, week: win(raw.seven_day) ?? find('weekly_all'), model, keys: models.map((m) => m.key) };
+  const all = find('weekly_all');
+  const week = win(raw.seven_day) ? { ...win(raw.seven_day), ...(all?.severity ? { severity: all.severity } : {}) } : all;
+  return { session, week, model, keys: models.map((m) => m.key) };
 }
 
 // Barras: quanto do limite semanal foi gasto em cada um dos últimos 7 dias.

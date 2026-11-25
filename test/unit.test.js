@@ -168,3 +168,17 @@ test('burn-in: pixel shift fica dentro do limite e horário noturno cruza a meia
   assert.equal(inRange(at(6, 59), '22:00', '07:00'), true);
   assert.equal(inRange(at(12, 0), '22:00', '07:00'), false);
 });
+
+test('cor: ritmo de uso vira laranja se estoura antes de renovar, vermelho perto do limite', async () => {
+  const { usageMood, runOut, WEEK_MS } = await import('../panel/mood.js');
+  const now = Date.UTC(2026, 10, 25, 13, 0);
+  const resetsAt = Date.UTC(2026, 10, 30, 13, 0); // 2 dias corridos de 7
+  assert.equal(usageMood({ pct: 51, resetsAt }, '#8AB4F8', WEEK_MS, now).color, '#FB8C3C'); // 51% em 2 dias: acaba antes
+  assert.match(usageMood({ pct: 51, resetsAt }, '#8AB4F8', WEEK_MS, now).note, /^acaba (hoje|dom|seg|ter|qua|qui|sex|sáb) \d{1,2}h$/);
+  assert.equal(usageMood({ pct: 4, resetsAt }, '#C58AF9', WEEK_MS, now).color, '#C58AF9');
+  assert.equal(usageMood({ pct: 92, resetsAt: now + 3600_000 }, '#8AB4F8', WEEK_MS, now).color, '#F87171');
+  assert.equal(usageMood({ pct: 30, resetsAt, severity: 'critical' }, '#8AB4F8', WEEK_MS, now).color, '#F87171');
+  // começo da janela (menos de 10%): não projeta
+  assert.equal(runOut({ pct: 20, resetsAt: now + WEEK_MS - 3600_000 }, WEEK_MS, now), null);
+  assert.equal(usageMood({ pct: null, unlimited: true }, '#F5A524', WEEK_MS, now).color, '#F5A524');
+});

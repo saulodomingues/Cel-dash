@@ -89,6 +89,14 @@ Todos os números dos mocks são de exemplo.
 - Fontes: Space Grotesk para números, Inter para o resto. Os mocks carregam do Google Fonts; no aparelho, sirva as fontes localmente para funcionar sem internet.
 - Margem externa de 12 px na tela 1: é a folga do pixel shift.
 
+## Cor (opção C, escolhida em 25/11/2026)
+
+Cor com significado, em `panel/mood.js`. Fundo continua preto; tons de fundo sempre muito escuros.
+- Relógio: card e dígitos quentes de dia (entre nascer e pôr do sol), frios à noite. Vale para os relógios das três telas.
+- Card do tempo (tela 1): tinta conforme a condição (chuva azul, sol âmbar, nublado cinza, noite índigo).
+- Uso do Claude: anel, barra e curva ficam laranja `#FB8C3C` se o ritmo linear desde o início da janela estoura o limite antes de renovar (aviso "acaba qui 17h"; só depois de 10% da janela) ou ≥ 75% / severidade "warning"; vermelho `#F87171` com ≥ 90%, severidade "critical" ou limite atingido.
+- Tela 3: temperatura da bateria (≥ 40° laranja, ≥ 45° vermelho), memória < 512 MB, Wi-Fi ≤ −75 dBm e latência ≥ 150 ms ficam laranja; internet fora, vermelho.
+
 ## Burn-in
 
 Decidido na conversa, em ordem de importância:

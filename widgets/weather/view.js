@@ -21,7 +21,7 @@ export function icon(name, size = 44) {
 }
 
 // Tela 1: atual + 5 dias.
-export function weatherCard(w, now) {
+export function weatherCard(w, now, chip = '#14161A') {
   const head = `<div style="display: flex; justify-content: space-between; ${LABEL}"><span>Tempo</span><span>${ago(w, now)}</span></div>`;
   const d = w?.data;
   if (!d) return head + noData();
@@ -42,7 +42,7 @@ ${icon(c.icon)}
 </div>
 </div>
 <div style="margin-top: auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; font-size: 11px; color: #9AA0A6; text-align: center">
-${d.days.slice(0, 5).map((x) => `<div style="background: #14161A; border-radius: 8px; padding: 6px 0">${WD[new Date(x.t).getDay()]}<div style="color: #E8EAED; font-size: 13px; margin-top: 2px">${deg(x.max)} <span style="color: #9AA0A6">${deg(x.min)}</span></div></div>`).join('\n')}
+${d.days.slice(0, 5).map((x) => `<div style="background: ${chip}; border-radius: 8px; padding: 6px 0">${WD[new Date(x.t).getDay()]}<div style="color: #E8EAED; font-size: 13px; margin-top: 2px">${deg(x.max)} <span style="color: #9AA0A6">${deg(x.min)}</span></div></div>`).join('\n')}
 </div>`;
 }
 

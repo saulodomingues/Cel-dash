@@ -1,13 +1,17 @@
 // Uso do Claude: anéis e barras (tela 1), linha fina (tela 2), curva da sessão (tela 3).
 import { esc, hm, pct, ago, resetText, noData, WD, SG, LABEL } from '/panel/lib.js';
+import { usageMood, SESSION_MS, WEEK_MS } from '/panel/mood.js';
 
 const AMBER = '#F5A524', LILAC = '#C58AF9', BLUE = '#8AB4F8';
 const C = 226.2; // circunferência do anel (r = 36)
 const clampPct = (v) => Math.max(0, Math.min(100, v));
 
-function ring(win, color, title, sub, now) {
+function ring(win, base, title, sub, now, windowMs) {
   const has = win && typeof win.pct === 'number';
-  const note = win?.unlimited ? 'sem limite no plano' : has ? resetText(win.resetsAt, now) : 'sem dados';
+  const mood = usageMood(win, base, windowMs, now);
+  const color = mood.color;
+  const note = win?.unlimited ? 'sem limite no plano' : !has ? 'sem dados'
+    : mood.note ? `<span style="color: ${color}">${esc(mood.note)}</span>` : resetText(win.resetsAt, now);
   const dash = has ? (clampPct(win.pct) / 100) * C : 0;
   return `
 <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
@@ -49,18 +53,19 @@ export function claudeCard(w, now, planLabel) {
   if (!d) return head + noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'sem dados');
   return `${head}
 <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr); gap: 14px; flex: 1; min-height: 0">
-${ring(d.session, AMBER, 'Sessão', '5 horas', now)}
-${ring(d.model, LILAC, 'Semana', d.model?.label || 'Fable', now)}
-${ring(d.week, BLUE, 'Semana', 'todos os modelos', now)}
+${ring(d.session, AMBER, 'Sessão', '5 horas', now, SESSION_MS)}
+${ring(d.model, LILAC, 'Semana', d.model?.label || 'Fable', now, WEEK_MS)}
+${ring(d.week, BLUE, 'Semana', 'todos os modelos', now, WEEK_MS)}
 ${bars7(d.days)}
 </div>`;
 }
 
 // Tela 2: três medidores numa linha fina.
-export function claudeLine(w) {
+export function claudeLine(w, now = Date.now()) {
   const d = w?.data;
-  const item = (label, win, color) => {
+  const item = (label, win, base, windowMs) => {
     const v = win && typeof win.pct === 'number' ? win.pct : null;
+    const color = usageMood(win, base, windowMs, now).color;
     return `
 <div style="flex: 1; min-width: 0">
 <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 11px; color: #9AA0A6">${esc(label)}</span><span style="${SG}; font-size: 20px; font-weight: 500; color: #C4C7CC">${v === null ? '—' : pct(v)}</span></div>
@@ -70,9 +75,9 @@ export function claudeLine(w) {
   return `
 <div style="${LABEL}">Claude${d ? '' : ' · sem dados'}</div>
 <div style="display: flex; gap: 16px">
-${item('Sessão', d?.session, AMBER)}
-${item(d?.model?.label || 'Fable', d?.model, LILAC)}
-${item('Semana', d?.week, BLUE)}
+${item('Sessão', d?.session, AMBER, SESSION_MS)}
+${item(d?.model?.label || 'Fable', d?.model, LILAC, WEEK_MS)}
+${item('Semana', d?.week, BLUE, WEEK_MS)}
 </div>`;
 }
 
@@ -94,6 +99,7 @@ ${body}
   if (s.unlimited) return frame('plano sem limite de 5 h', center('o seu plano não tem limite de 5 h'));
   if (!s.resetsAt || s.resetsAt <= now) return frame(`${pct(s.pct)} agora`, center('nenhuma sessão em andamento'));
 
+  const LINE = usageMood(s, AMBER, SESSION_MS, now).color;
   const end = s.resetsAt, start = end - 5 * 3600_000;
   const x = (t) => X0 + ((Math.max(start, Math.min(end, t)) - start) / (end - start)) * (X1 - X0);
   // a curva começa em 0 no início da sessão e termina na leitura atual
@@ -112,10 +118,10 @@ ${body}
   const anchorEnd = nx > 110;
   const hours = [0, 1, 2, 3, 4, 5].map((i) => `<text x="${(X0 + i * 90).toFixed(1)}" y="180" text-anchor="middle" fill="#9AA0A6" font-family="Inter, sans-serif" font-size="11">${hm(start + i * 3600_000)}</text>`).join('');
   return frame(right, `
-<path d="${path} L${nx.toFixed(1)} ${Y0} L${X0}.0 ${Y0} Z" fill="${AMBER}" fill-opacity="0.08"/>
-<path d="${path}" fill="none" stroke="${AMBER}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M${nx.toFixed(1)} ${ny.toFixed(1)} L${px.toFixed(1)} ${py.toFixed(1)}" fill="none" stroke="${AMBER}" stroke-width="1.5" stroke-dasharray="3 5" stroke-linecap="round"/>
-<circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="4" fill="#000000" stroke="${AMBER}" stroke-width="2"/>
+<path d="${path} L${nx.toFixed(1)} ${Y0} L${X0}.0 ${Y0} Z" fill="${LINE}" fill-opacity="0.08"/>
+<path d="${path}" fill="none" stroke="${LINE}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M${nx.toFixed(1)} ${ny.toFixed(1)} L${px.toFixed(1)} ${py.toFixed(1)}" fill="none" stroke="${LINE}" stroke-width="1.5" stroke-dasharray="3 5" stroke-linecap="round"/>
+<circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="4" fill="#000000" stroke="${LINE}" stroke-width="2"/>
 <text x="${(anchorEnd ? nx - 10 : nx + 10).toFixed(1)}" y="${Math.max(16, ny - 8).toFixed(1)}" text-anchor="${anchorEnd ? 'end' : 'start'}" fill="#E8EAED" font-family="'Space Grotesk', sans-serif" font-size="14">${pct(s.pct)} agora</text>
 ${hours}`);
 }
