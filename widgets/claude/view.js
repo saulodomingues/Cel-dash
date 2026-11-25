@@ -7,6 +7,7 @@ const clampPct = (v) => Math.max(0, Math.min(100, v));
 
 function ring(win, color, title, sub, now) {
   const has = win && typeof win.pct === 'number';
+  const note = win?.unlimited ? 'sem limite no plano' : has ? resetText(win.resetsAt, now) : 'sem dados';
   const dash = has ? (clampPct(win.pct) / 100) * C : 0;
   return `
 <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
@@ -18,7 +19,7 @@ ${dash > 0.5 ? `<circle cx="42" cy="42" r="36" fill="none" stroke="${color}" str
 <div style="min-width: 0">
 <div style="font-size: 13px; color: #E8EAED; font-weight: 500">${esc(title)}</div>
 <div style="font-size: 11px; color: #C4C7CC; white-space: nowrap">${esc(sub)}</div>
-<div style="font-size: 11px; color: #9AA0A6; margin-top: 6px; white-space: nowrap">${has ? resetText(win.resetsAt, now) : 'sem dados'}</div>
+<div style="font-size: 11px; color: #9AA0A6; margin-top: 6px; white-space: nowrap">${note}</div>
 </div>
 </div>`;
 }
@@ -90,6 +91,7 @@ ${body}
 </svg>`;
   const center = (msg) => `<text x="265" y="120" text-anchor="middle" fill="#9AA0A6" font-family="Inter, sans-serif" font-size="12">${msg}</text>`;
   if (!s) return frame('sem dados', center('sem dados'));
+  if (s.unlimited) return frame('plano sem limite de 5 h', center('o seu plano não tem limite de 5 h'));
   if (!s.resetsAt || s.resetsAt <= now) return frame(`${pct(s.pct)} agora`, center('nenhuma sessão em andamento'));
 
   const end = s.resetsAt, start = end - 5 * 3600_000;

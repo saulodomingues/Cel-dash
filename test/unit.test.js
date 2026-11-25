@@ -39,6 +39,7 @@ test('claude: normaliza a resposta e escolhe o limite por modelo', () => {
   assert.equal(n.model.key, 'seven_day_fable');
   assert.equal(n.model.label, 'Fable');
   assert.deepEqual(n.keys, ['seven_day_opus', 'seven_day_fable']);
+  assert.equal(n.model.pct, 78);
   assert.equal(claude.normalize(raw, 'seven_day_opus').model.label, 'Opus');
 });
 
@@ -47,10 +48,29 @@ test('claude: sem limite por modelo o anel fica sem dados, sem quebrar', () => {
   assert.equal(n.model, null);
   assert.equal(n.week, null);
   assert.deepEqual(n.session, { pct: 0, resetsAt: null });
-  // sem sessão em andamento: five_hour nulo vira 0%, não "sem dados"
-  const idle = claude.normalize({ five_hour: null, seven_day: { utilization: 51, resets_at: '2026-11-30T13:00:00Z' } });
-  assert.deepEqual(idle.session, { pct: 0, resetsAt: null });
-  assert.equal(idle.week.pct, 51);
+});
+
+test('claude: formato atual com lista "limits" (Fable) e plano sem limite de 5 h', () => {
+  const raw = {
+    five_hour: null,
+    seven_day: { utilization: 51, resets_at: '2026-11-30T13:00:00Z' },
+    limits: [
+      { kind: 'weekly_all', group: 'weekly', percent: 51, resets_at: '2026-11-30T13:00:00Z' },
+      { kind: 'weekly_scoped', group: 'weekly', percent: 4, resets_at: '2026-11-30T13:00:00Z', scope: { model: { display_name: 'Fable' } } },
+    ],
+  };
+  const n = claude.normalize(raw);
+  assert.equal(n.session.unlimited, true);
+  assert.equal(n.week.pct, 51);
+  assert.equal(n.model.label, 'Fable');
+  assert.equal(n.model.pct, 4);
+  assert.equal(n.model.resetsAt, Date.parse('2026-11-30T13:00:00Z'));
+  assert.deepEqual(n.keys, ['limit:Fable']);
+  // só a lista, sem os campos antigos, e reset em segundos
+  const m = claude.normalize({ limits: [{ kind: 'session', percent: 20, resets_at: 1764500000 }, { kind: 'weekly_all', utilization: 30, resets_at: null }] });
+  assert.deepEqual(m.session, { pct: 20, resetsAt: 1764500000000 });
+  assert.equal(m.week.pct, 30);
+  assert.equal(m.model, null);
 });
 
 test('claude: uso diário soma os aumentos e trata a renovação semanal', () => {
