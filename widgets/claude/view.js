@@ -1,5 +1,5 @@
 // Uso do Claude: anéis e barras (tela 1), linha fina (tela 2), curva da sessão (tela 3).
-import { esc, hm, pct, ago, resetText, noData, WD, SG, LABEL } from '/panel/lib.js';
+import { esc, hm, pct, resetText, noData, cardHead, WD, SG, LABEL } from '/panel/lib.js';
 import { usageMood, SESSION_MS, WEEK_MS } from '/panel/mood.js';
 
 const AMBER = '#F5A524', LILAC = '#C58AF9', BLUE = '#8AB4F8';
@@ -78,7 +78,7 @@ export function pickCounters(d, view = DEFAULT_VIEW) {
 // Tela 1: card inteiro.
 // `right`: HTML opcional na ponta direita do card (ex.: GIF), numa coluna de largura fixa.
 export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '') {
-  const head = `<div style="display: flex; justify-content: space-between; ${LABEL}"><span>Claude${planLabel ? ` · ${esc(planLabel)}` : ''}</span><span>${ago(w, now)}</span></div>`;
+  const head = cardHead(`Claude${planLabel ? ` · ${esc(planLabel)}` : ''}`, w, now);
   const d = w?.data;
   if (!d) {
     const msg = noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'sem dados');

@@ -1,5 +1,5 @@
 // Tempo: card da tela 1, curva de 24 h e arco do sol da tela 2.
-import { esc, hm, pad, deg, pct, num, dur, ago, noData, WD, SG, LABEL } from '/panel/lib.js';
+import { esc, hm, pad, deg, pct, num, dur, cardHead, noData, WD, SG, LABEL } from '/panel/lib.js';
 
 const CLOUD = 'M7 17a4 4 0 0 1 .6-7.95A5.5 5.5 0 0 1 18 10.5a3.3 3.3 0 0 1-.5 6.5z';
 const SMALL_CLOUD = 'M9.5 20a3.4 3.4 0 0 1 .5-6.76A4.7 4.7 0 0 1 18.9 15.4 2.8 2.8 0 0 1 18.5 20z';
@@ -22,7 +22,7 @@ export function icon(name, size = 44) {
 
 // Tela 1: atual + 5 dias.
 export function weatherCard(w, now, chip = '#14161A') {
-  const head = `<div style="display: flex; justify-content: space-between; ${LABEL}"><span>Tempo</span><span>${ago(w, now)}</span></div>`;
+  const head = cardHead('Tempo', w, now);
   const d = w?.data;
   if (!d) return head + noData();
   const c = d.current;
