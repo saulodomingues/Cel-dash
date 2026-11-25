@@ -43,6 +43,10 @@ export function normalize(j, city, now = Date.now()) {
   const left = [];
   for (let i = i0; i < times.length && new Date(times[i]).toDateString() === new Date(now).toDateString(); i++) left.push(i);
   const peak = left.reduce((b, i) => ((h.precipitation_probability?.[i] ?? -1) > (h.precipitation_probability?.[b] ?? -1) ? i : b), left[0] ?? i0);
+  const week = [];
+  for (let i = t0; i < Math.min(t0 + 7, d.time.length); i++) {
+    week.push({ t: ts(`${d.time[i]}T12:00`), max: d.temperature_2m_max[i], min: d.temperature_2m_min[i], rain: d.precipitation_probability_max?.[i] ?? null, ...describe(d.weather_code[i]) });
+  }
   const pick = (arr) => (Array.isArray(arr) && typeof arr[t0] === 'number' ? arr[t0] : null);
   return {
     city: city.name,
@@ -55,10 +59,11 @@ export function normalize(j, city, now = Date.now()) {
     },
     current: {
       temp: c.temperature_2m, feels: c.apparent_temperature, wind: c.wind_speed_10m,
+      windDir: typeof c.wind_direction_10m === 'number' ? c.wind_direction_10m : null,
       humidity: typeof c.relative_humidity_2m === 'number' ? c.relative_humidity_2m : null,
       rain: hours[0]?.rain ?? null, ...describe(c.weather_code, c.is_day !== 0),
     },
-    hours, days,
+    hours, days, week,
     sun: { rises: d.sunrise.map(ts), sets: d.sunset.map(ts) },
   };
 }
@@ -67,7 +72,7 @@ export async function collect({ config }) {
   const { lat, lon } = config.city;
   const url = 'https://api.open-meteo.com/v1/forecast' +
     `?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=7&wind_speed_unit=kmh` +
-    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,relative_humidity_2m' +
+    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,is_day,relative_humidity_2m' +
     '&hourly=temperature_2m,precipitation_probability' +
     '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,uv_index_max';
   const r = await fetch(url, { signal: AbortSignal.timeout(15_000) });
@@ -86,10 +91,12 @@ export function demo({ config }) {
   const fc = [[27, 18, 2], [29, 19, 0], [24, 17, 61], [26, 18, 3], [28, 19, 1]];
   return {
     city: config.city.name,
-    current: { temp: 21, feels: 22, wind: 12, rain: 82, humidity: 78, text: 'Chuva fraca', icon: 'rain' },
+    current: { temp: 21, feels: 22, wind: 12, windDir: 45, rain: 82, humidity: 78, text: 'Chuva fraca', icon: 'rain' },
     today: { rainMax: 80, rainPeak: 70, rainPeakAt: hour + 2 * 3600_000, rainMm: 6.4, uvMax: 7.2 },
     hours: temps.map((temp, i) => ({ t: hour + i * 3600_000, temp, rain: rain[i] })),
     days: fc.map(([max, min, code], i) => ({ t: day(i + 1, 12, 0), max, min, ...describe(code) })),
+    week: [[27, 18, 61, 80], [27, 18, 2, 20], [29, 19, 0, 10], [24, 17, 61, 70], [26, 18, 3, 30], [28, 19, 1, 10], [30, 20, 0, 5]]
+      .map(([max, min, code, rain], i) => ({ t: day(i, 12, 0), max, min, rain, ...describe(code) })),
     sun: { rises: [0, 1, 2].map((i) => day(i, 5, 12)), sets: [0, 1, 2].map((i) => day(i, 18, 34)) },
   };
 }
