@@ -84,6 +84,7 @@ function secretsStatus() {
     claudeManual: Boolean(s.claude?.accessToken),
     claudeManualHasRefresh: Boolean(s.claude?.refreshToken),
     claudeManualExpiresAt: s.claude?.expiresAt || null,
+    gitToken: Boolean(s.git?.token),
   };
 }
 
@@ -191,6 +192,18 @@ async function api(req, res, url) {
     return send(res, 200, { results: (j.results || []).map((c) => ({
       name: c.name, region: [c.admin1, c.country].filter(Boolean).join(', '), lat: c.latitude, lon: c.longitude,
     })) });
+  }
+  if (p === '/api/admin/secrets/git' && m === 'PUT') {
+    const token = String((await readBody(req)).token || '').trim();
+    if (token && !/^[A-Za-z0-9_]{20,255}$/.test(token)) return send(res, 400, { error: 'Isso não parece um token do GitHub (ghp_… ou github_pat_…).' });
+    const s = { ...getSecrets() };
+    if (token) s.git = { token }; else delete s.git;
+    saveSecrets(s);
+    return send(res, 200, { secrets: secretsStatus() });
+  }
+  if (p === '/api/admin/update/test' && m === 'POST') {
+    await updater.testAccess();
+    return send(res, 200, { ok: true });
   }
   if (p === '/api/admin/update' && m === 'POST') {
     const updated = await updater.check();

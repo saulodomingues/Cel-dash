@@ -205,7 +205,15 @@ ${field('port', 'Porta do servidor (exige reinício)', 'number', 'min="1024" max
 ${field('update.enabled', 'Atualizar sozinho pelo GitHub', 'checkbox')}
 ${field('update.intervalMin', 'Conferir a cada (min)', 'number', 'min="1" max="1440"')}
 <button id="update" ${S.update.supervised ? '' : 'disabled'}>Buscar atualização agora</button>
-</div></section>
+</div>
+<form id="gitForm" class="row" style="margin-top:12px">
+<label><span>Token do GitHub, para repositório privado (${S.secrets.gitToken ? 'salvo; deixe vazio para manter' : 'nenhum salvo'})</span><input type="password" id="gitToken" placeholder="github_pat_…" autocomplete="off" spellcheck="false"></label>
+<button class="primary">Salvar token</button>
+<button type="button" id="gitTest">Testar acesso</button>
+<button type="button" id="gitClear" ${S.secrets.gitToken ? '' : 'disabled'}>Apagar</button>
+</form>
+<p class="muted" style="margin-top:8px">Crie em GitHub → Settings → Developer settings → Fine-grained tokens, só para este repositório, com leitura em "Contents". Fica guardado só no celular e nunca é reexibido. Salve e teste <b>antes</b> de deixar o repositório privado.</p>
+</section>
 
 <section class="card"><h2>Senha</h2>
 <form id="pw" class="row">
@@ -252,6 +260,21 @@ function wire() {
     if (!r.updated) { S.update = r.update; toast('Já está na versão mais recente.'); return render(); }
     toast('Versão nova baixada. Reiniciando o servidor…');
     setTimeout(() => location.reload(), 8000);
+  }));
+  document.getElementById('gitForm').addEventListener('submit', guard(async (e) => {
+    e.preventDefault();
+    const v = document.getElementById('gitToken').value.trim();
+    if (!v) return toast('Cole o token primeiro.');
+    S.secrets = (await call('PUT', '/api/admin/secrets/git', { token: v })).secrets;
+    render(); toast('Token salvo. Testando…');
+    await call('POST', '/api/admin/update/test'); toast('Acesso ao GitHub funcionando.');
+  }));
+  document.getElementById('gitTest').addEventListener('click', guard(async () => {
+    toast('Testando…'); await call('POST', '/api/admin/update/test'); toast('Acesso ao GitHub funcionando.');
+  }));
+  document.getElementById('gitClear').addEventListener('click', guard(async () => {
+    S.secrets = (await call('PUT', '/api/admin/secrets/git', { token: '' })).secrets;
+    render(); toast('Token apagado.');
   }));
   document.getElementById('reload').addEventListener('click', guard(async () => { await call('POST', '/api/admin/reload-panel'); toast('Painel recarregado.'); }));
   document.getElementById('logout').addEventListener('click', guard(async () => { await call('POST', '/api/admin/logout'); boot(); }));

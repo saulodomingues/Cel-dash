@@ -3,13 +3,26 @@
 // Só fica ativo quando o servidor roda por esse laço (SUPERVISED=1), para nunca derrubar
 // um `npm start` feito à mão no PC.
 import { execFile } from 'node:child_process';
-import { ROOT, getConfig } from './config.js';
+import { ROOT, getConfig, getSecrets } from './config.js';
+
+// Token do GitHub salvo no /admin (repositório privado). Vai só no cabeçalho desta chamada,
+// pela variável de ambiente: não fica na linha de comando, no .git/config nem no log.
+function authEnv(token) {
+  if (!token) return {};
+  const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
+  return { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'http.https://github.com/.extraheader', GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${basic}` };
+}
 
 const git = (...args) => new Promise((resolve, reject) => {
-  // GIT_TERMINAL_PROMPT=0: sem credencial salva, falha na hora em vez de ficar esperando digitação
-  execFile('git', ['-C', ROOT, ...args], { timeout: 90_000, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } }, (err, stdout, stderr) => {
+  const token = getSecrets().git?.token;
+  const env = { ...process.env, GIT_TERMINAL_PROMPT: '0', ...authEnv(token) }; // sem credencial: falha na hora, sem esperar digitação
+  execFile('git', ['-C', ROOT, ...args], { timeout: 90_000, env }, (err, stdout, stderr) => {
     if (!err) return resolve(stdout.trim());
-    reject(new Error(err.code === 'ENOENT' ? 'git não está instalado' : (stderr || err.message).trim().split('\n').pop()));
+    const msg = (stderr || err.message).trim().split('\n').pop().replaceAll(token || '\0', '***');
+    if (/could not read Username|Authentication failed|not found|403|401/i.test(msg)) {
+      return reject(new Error(token ? 'O GitHub recusou o token: confira se ele vale para este repositório e tem leitura em "Contents".' : 'O GitHub pediu login: o repositório é privado. Salve um token na seção Atualização.'));
+    }
+    reject(new Error(err.code === 'ENOENT' ? 'git não está instalado' : msg));
   });
 });
 
@@ -23,6 +36,11 @@ export async function init() {
     status.date = Number(await git('log', '-1', '--format=%ct')) * 1000;
     status.branch = await git('rev-parse', '--abbrev-ref', 'HEAD');
   } catch { /* pasta sem git: fica "dev" e sem atualização */ }
+}
+
+// Confere se o GitHub aceita a credencial atual, sem baixar nada.
+export async function testAccess() {
+  await git('ls-remote', '--exit-code', 'origin', 'HEAD');
 }
 
 // Devolve true se baixou versão nova (e agenda o reinício).

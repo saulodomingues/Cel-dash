@@ -96,6 +96,24 @@ test('claude: curva só com leituras da sessão atual', () => {
   assert.deepEqual(curve.map((p) => p.pct), [10, 30]);
 });
 
+test('claude: resposta real de uma conta Ultra (25/11/2026)', () => {
+  const raw = {
+    five_hour: null,
+    seven_day: { utilization: 51, resets_at: '2026-11-30T13:00:00.342639+00:00', limit_dollars: null },
+    seven_day_oauth_apps: null, seven_day_opus: null, seven_day_sonnet: null, seven_day_cowork: null, seven_day_omelette: null,
+    limits: [
+      { kind: 'weekly_all', group: 'weekly', percent: 51, severity: 'normal', resets_at: '2026-11-30T13:00:00.342639+00:00', scope: null, is_active: true },
+      { kind: 'weekly_scoped', group: 'weekly', percent: 4, severity: 'normal', resets_at: '2026-11-30T13:00:00.342782+00:00', scope: { model: { id: null, display_name: 'Fable' }, surface: null }, is_active: false },
+    ],
+  };
+  const n = claude.normalize(raw);
+  assert.equal(n.session.unlimited, true);
+  assert.equal(n.week.pct, 51);
+  assert.equal(n.model.label, 'Fable');
+  assert.equal(n.model.pct, 4);
+  assert.deepEqual(n.keys, ['limit:Fable']);
+});
+
 test('tempo: normaliza a resposta do Open-Meteo', () => {
   const p = (n) => String(n).padStart(2, '0');
   const base = new Date(2026, 10, 25);
