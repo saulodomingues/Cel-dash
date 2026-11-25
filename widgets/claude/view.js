@@ -87,11 +87,23 @@ export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '') {
   const rings = pickCounters(d, view);
   const stats = view.showStats !== false || rings.length === 0; // o card nunca fica vazio
   // 4 espaços: cada anel ocupa 1; a estatística fica com 0,8 mais o espaço de cada anel que saiu
-  const cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : []), ...(right ? ['124px'] : [])].join(' ');
-  // largura de cada anel: card de ~722 px úteis, menos GIF e espaçamentos; abaixo de ~170 px o texto ao lado não cabe (o mock usa ~179)
-  const items = rings.length + (stats ? 1 : 0) + (right ? 1 : 0);
+  // Sem GIF: 4 espaços; cada anel ocupa 1 e a estatística fica com 0,8 + o espaço dos anéis que saíram.
+  // Com GIF: os anéis mantêm a largura que teriam sem ele e o GIF tira espaço só da estatística.
+  // Se não sobrar o mínimo para a estatística, aí sim os anéis ficam compactos.
+  const W = 722, GAP = 14, GIF = 124, STATS_MIN = 150;
   const fr = rings.length + (stats ? 3 - rings.length + 0.8 : 0);
-  const compact = rings.length > 0 && (722 - (right ? 124 : 0) - 14 * (items - 1)) / fr < 170;
+  const ringW = (W - GAP * (rings.length + (stats ? 1 : 0) - 1)) / fr; // largura de cada anel sem o GIF
+  let cols, compact = false;
+  if (!right) {
+    cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : [])];
+  } else if (stats && W - GIF - GAP * (rings.length + 1) - ringW * rings.length >= STATS_MIN) {
+    cols = [...rings.map(() => `${Math.floor(ringW)}px`), 'minmax(0, 1fr)', `${GIF}px`];
+  } else {
+    cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : []), `${GIF}px`];
+    const items = rings.length + (stats ? 1 : 0) + 1;
+    compact = rings.length > 0 && (W - GIF - GAP * (items - 1)) / fr < 170; // abaixo de ~170 px o texto ao lado não cabe
+  }
+  cols = cols.join(' ');
   return `${head}
 <div style="display: grid; grid-template-columns: ${cols}; gap: 14px; flex: 1; min-height: 0">
 ${rings.map((c) => ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats, compact)).join('\n')}
