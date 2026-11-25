@@ -19,18 +19,21 @@ export function tickerBar(items, crawl) {
 </div>`;
 }
 
-// Onde o letreiro parou: guardado ao sair da tela, para continuar dali quando ela voltar.
-const saved = { key: '', ms: 0 };
+// Onde o letreiro parou: guardado ao sair da tela (ou antes de redesenhar com manchetes novas),
+// para continuar dali. Vale mesmo que a lista tenha mudado: nunca volta ao começo vazio.
+const saved = { frac: 0 }; // fração do percurso (0 a 1)
 
 // Chamado pelo painel antes de trocar o conteúdo da tela.
 export function saveTicker(root) {
   const bar = root.querySelector('[data-keep^="ticker-"]');
   const anim = bar?.querySelector('[data-ticker-track]')?.getAnimations?.()[0];
-  if (anim && anim.currentTime != null) Object.assign(saved, { key: bar.dataset.keep, ms: anim.currentTime });
+  // progresso da volta atual: já inclui o atraso negativo da retomada anterior
+  const p = anim?.effect?.getComputedTiming?.().progress;
+  if (typeof p === 'number') saved.frac = p;
 }
 
 // Ajusta a duração para a velocidade ficar constante, seja qual for o tamanho do texto,
-// e retoma do ponto onde parou se as manchetes forem as mesmas.
+// e retoma do ponto onde parou.
 export function mountTicker(root) {
   const bar = root.querySelector('[data-keep^="ticker-"]');
   const track = bar?.querySelector('[data-ticker-track]');
@@ -38,5 +41,5 @@ export function mountTicker(root) {
   track.dataset.ready = '1';
   const dur = Math.max(10, (track.scrollWidth + track.parentElement.clientWidth) / Number(bar.dataset.speed || 70));
   track.style.animationDuration = `${dur}s`;
-  if (saved.key === bar.dataset.keep && saved.ms > 0) track.style.animationDelay = `-${(saved.ms / 1000) % dur}s`;
+  if (saved.frac > 0) track.style.animationDelay = `-${(saved.frac * dur).toFixed(2)}s`;
 }
