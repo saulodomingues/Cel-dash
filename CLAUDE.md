@@ -87,7 +87,7 @@ Arquivos: `mocks/telaN.html` (HTML estático, abre direto no navegador) e `mocks
 - Topo: "● MANCHETES", quando atualizou e quantas fontes; relógio no canto superior direito.
 - Centro: uma manchete grande por vez (fonte, há quanto tempo, n/N, resumo de 2 linhas), troca sozinha a cada `news.seconds` (12 s) subindo e saindo; "A seguir" e barra vermelha de tempo embaixo.
 - Rodapé: faixa "AGORA" com todas as manchetes passando (letreiro em CSS, velocidade constante).
-- `widgets/news/`: parser RSS/Atom próprio (CDATA, entidades, ISO-8859-1), dedup por título, filtro de horas e palavras, mistura as fontes no começo da fila. Só busca com a tela ligada. A troca e o letreiro rodam em `mountNews`, chamado pelo painel depois que o HTML da tela muda; a posição na fila continua quando a tela volta na rotação.
+- `widgets/news/`: parser RSS/Atom próprio (CDATA, entidades; codificação pelo XML, pelo cabeçalho HTTP e, se o texto não for UTF-8 válido, Latin-1 — o UOL manda Latin-1 sem declarar), dedup por título, filtro de horas e palavras, mistura as fontes no começo da fila. Só busca com a tela ligada. A troca e o letreiro rodam em `mountNews`, chamado pelo painel depois que o HTML da tela muda; a posição na fila continua quando a tela volta na rotação.
 - Config em `/admin` → Manchetes: fontes do catálogo, outros feeds (URL), tempo por manchete, velocidade do letreiro, intervalo, idade máxima, quantidade, palavras para esconder. Endereços dos feeds do catálogo não testados daqui (rede bloqueada).
 
 Todos os números dos mocks são de exemplo.

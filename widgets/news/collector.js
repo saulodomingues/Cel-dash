@@ -42,11 +42,18 @@ export function parseFeed(xml, source) {
   return items;
 }
 
-// Lê o corpo respeitando a codificação declarada no XML (alguns feeds ainda usam ISO-8859-1).
-export function bytesToText(buf) {
+// Lê o corpo com a codificação certa. Alguns feeds (ex.: UOL) vêm em ISO-8859-1 sem dizer isso
+// direito no XML. Ordem: o que o XML declara, o que o cabeçalho HTTP diz, e por fim confere se
+// é UTF-8 válido; se não for, lê como Latin-1/Windows-1252.
+export function bytesToText(buf, contentType = '') {
   const head = Buffer.from(buf.slice(0, 200)).toString('latin1');
-  const enc = /encoding=["']([\w-]+)["']/i.exec(head)?.[1]?.toLowerCase() || 'utf-8';
-  try { return new TextDecoder(enc).decode(buf); } catch { return new TextDecoder('utf-8').decode(buf); }
+  const declared = (/encoding=["']([\w-]+)["']/i.exec(head)?.[1] || /charset=([\w-]+)/i.exec(contentType)?.[1] || '').toLowerCase();
+  const latin = () => { try { return new TextDecoder('windows-1252').decode(buf); } catch { return Buffer.from(buf).toString('latin1'); } };
+  if (declared && !/^utf-?8$/.test(declared)) {
+    if (/^(iso-8859-1|latin1|windows-1252|cp1252|us-ascii)$/.test(declared)) return latin();
+    try { return new TextDecoder(declared).decode(buf); } catch { /* codificação que este Node não conhece: tenta as outras */ }
+  }
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { return latin(); }
 }
 
 const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').trim();
@@ -88,7 +95,7 @@ export async function collect({ config }) {
     try {
       const r = await fetch(f.url, { headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 13) monitor-mesa', Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' }, signal: AbortSignal.timeout(15_000) });
       if (!r.ok) throw new Error(`respondeu ${r.status}`);
-      const items = parseFeed(bytesToText(new Uint8Array(await r.arrayBuffer())), f.name);
+      const items = parseFeed(bytesToText(new Uint8Array(await r.arrayBuffer()), r.headers.get('content-type') || ''), f.name);
       if (!items.length) throw new Error('nenhuma manchete no feed');
       return items;
     } catch (e) {

@@ -275,6 +275,12 @@ test('manchetes: lê RSS e Atom, decodifica, filtra e mistura as fontes', async 
   assert.equal(b[0].title, 'Atualização do “Galaxy”');
   const latin = new Uint8Array(Buffer.from('<?xml version="1.0" encoding="ISO-8859-1"?><rss><item><title>Ação</title></item></rss>', 'latin1'));
   assert.equal(n.parseFeed(n.bytesToText(latin), 'F')[0].title, 'Ação');
+  // Latin-1 sem declarar (ou declarando UTF-8 errado), como o feed do UOL: detecta e corrige
+  const semDecl = new Uint8Array(Buffer.from('<?xml version="1.0" encoding="UTF-8"?><rss><item><title>Presidente da Colômbia; vídeo; operação; reféns</title></item></rss>', 'latin1'));
+  assert.equal(n.parseFeed(n.bytesToText(semDecl), 'UOL')[0].title, 'Presidente da Colômbia; vídeo; operação; reféns');
+  const porCabecalho = new Uint8Array(Buffer.from('<rss><item><title>Ação</title></item></rss>', 'latin1'));
+  assert.equal(n.parseFeed(n.bytesToText(porCabecalho, 'text/xml; charset=ISO-8859-1'), 'F')[0].title, 'Ação');
+  assert.equal(n.parseFeed(n.bytesToText(new Uint8Array(Buffer.from('<rss><item><title>Ação</title></item></rss>'))), 'F')[0].title, 'Ação'); // UTF-8 normal
   const now = Date.parse('2026-11-26T00:00:00Z');
   const out = n.mix([a, b, [{ title: 'frente fria chega & derruba temperaturas!', t: now - 60_000, source: 'Dup' }]], { blockWords: ['bbb'], maxAgeHours: 12, maxItems: 10 }, now);
   assert.ok(!out.some((x) => /BBB/.test(x.title)));            // palavra bloqueada
