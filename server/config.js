@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { CATALOG, MAX_QUOTES } from '../widgets/quotes/catalog.shared.js';
+import { FEEDS } from '../widgets/news/catalog.shared.js';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -19,6 +20,7 @@ export const DEFAULTS = {
     { id: 'tela1', enabled: true },
     { id: 'tela2', enabled: true },
     { id: 'tela3', enabled: true },
+    { id: 'news', enabled: true }, // manchetes: só entra na rotação se houver manchetes
     { id: 'gif', enabled: false }, // tela cheia de GIF: desligada por padrão; só entra na rotação se houver imagem
   ],
   gif: { items: [], fit: 'contain', full: '*' }, // items: [{ file, name }] em data/media; full: GIF da tela cheia ('*' = alterna)
@@ -41,6 +43,8 @@ export const DEFAULTS = {
   idle: { enabled: true, afterMin: 10, offAfterMin: 20 },
   update: { enabled: true, intervalMin: 5 },
   weather: { intervalMin: 15 },
+  // manchetes: fontes do catálogo (widgets/news/catalog.shared.js) + endereços de feed colados
+  news: { feeds: ['g1', 'folha', 'bbc', 'agbrasil', 'tecnoblog'], custom: [], seconds: 12, crawl: 'normal', intervalMin: 10, maxAgeHours: 12, blockWords: [], maxItems: 20 },
   quotes: { items: ['USD', 'EUR', 'BTC', 'ETH', 'IBOV', 'SPX'], intervalMin: 5 }, // ids de widgets/quotes/catalog.shared.js, até 6
   claude: {
     intervalMin: 10,
@@ -96,6 +100,14 @@ function sanitize(c) {
   if (c.claudeView.gif !== '*' && !c.gif.items.some((i) => i.file === c.claudeView.gif)) c.claudeView.gif = '';
   c.quotes.items = [...new Set(c.quotes.items.filter((id) => CATALOG.some((q) => q.id === id)))].slice(0, MAX_QUOTES);
   c.quotes.intervalMin = clamp(Math.round(c.quotes.intervalMin), 2, 120);
+  c.news.feeds = [...new Set(c.news.feeds.filter((id) => FEEDS.some((f) => f.id === id)))];
+  c.news.custom = [...new Set(c.news.custom.map((u) => String(u).trim()).filter((u) => /^https?:\/\/[^\s]+$/.test(u)))].slice(0, 10);
+  c.news.seconds = clamp(Math.round(c.news.seconds), 5, 60);
+  c.news.crawl = ['lenta', 'normal', 'rapida'].includes(c.news.crawl) ? c.news.crawl : 'normal';
+  c.news.intervalMin = clamp(Math.round(c.news.intervalMin), 5, 120);
+  c.news.maxAgeHours = clamp(Math.round(c.news.maxAgeHours), 1, 72);
+  c.news.blockWords = c.news.blockWords.map((w) => String(w).trim()).filter(Boolean).slice(0, 30);
+  c.news.maxItems = clamp(Math.round(c.news.maxItems), 3, 40);
   c.display.browser = c.display.browser === 'fully' ? 'fully' : 'chrome';
   c.gif.fit = c.gif.fit === 'cover' ? 'cover' : 'contain';
   c.gif.items = c.gif.items.filter((i) => i && /^[a-f0-9]{16}\.(gif|png|jpg|webp)$/.test(i.file)).map((i) => ({ file: i.file, name: String(i.name || i.file).slice(0, 80) }));

@@ -1,9 +1,10 @@
+import { FEEDS as NEWS_FEEDS } from '/widgets/news/catalog.shared.js';
 import { CATALOG as QUOTES, MAX_QUOTES as MAX_Q } from '/widgets/quotes/catalog.shared.js';
 // /admin: telas e configurações. Funciona no navegador do PC e no próprio celular.
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol, chuva, umidade e UV'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'], gif: ['GIF', 'Só a imagem animada, em tela cheia. Envie abaixo.'] };
-const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S20', quotes: 'Cotações' };
+const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol, chuva, umidade e UV'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'], gif: ['GIF', 'Só a imagem animada, em tela cheia. Envie abaixo.'], news: ['Manchetes', 'Notícias passando sozinhas. Configure em Manchetes, abaixo.'] };
+const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S20', quotes: 'Cotações', news: 'Manchetes' };
 let S = null; // { config, secrets, status, server, demo }
 let dirty = false;
 
@@ -196,6 +197,29 @@ ${items.map((i) => `<option value="${esc(i.file)}" ${S.config.gif.full === i.fil
 </section>`;
 }
 
+// ---------- manchetes ----------
+function newsSection() {
+  const n = S.config.news;
+  const errs = S.status.news?.data?.errors || {};
+  const errList = Object.entries(errs);
+  return `
+<section class="card"><h2>Manchetes</h2>
+<p class="muted">Tela de notícias que passam sozinhas: manchete grande trocando e letreiro no rodapé. Liga e desliga em Telas, acima. As manchetes vêm dos feeds públicos (RSS) dos sites.</p>
+<div class="muted" style="margin-bottom:4px">Fontes</div>
+<div class="qgrid">${NEWS_FEEDS.map((f) => `<label class="check"><input type="checkbox" data-feed="${f.id}" ${n.feeds.includes(f.id) ? 'checked' : ''}>${esc(f.name)}</label>`).join('')}</div>
+<div class="row" style="margin-top:8px"><label><span>Outros feeds (um endereço por linha)</span><textarea id="newsCustom" placeholder="https://site.com.br/feed/" spellcheck="false" style="min-height:60px">${esc(n.custom.join('\n'))}</textarea></label></div>
+${errList.length ? `<p class="err" style="margin-top:8px">Fontes com erro: ${errList.map(([k, v]) => `${esc(k)} (${esc(v)})`).join(' · ')}</p>` : ''}
+<div class="grid" style="margin-top:12px">
+${field('news.seconds', 'Cada manchete fica (s)', 'number', 'min="5" max="60"')}
+<label>Velocidade do letreiro<select data-path="news.crawl">${[['lenta', 'Lenta'], ['normal', 'Normal'], ['rapida', 'Rápida']].map(([v, t]) => `<option value="${v}" ${n.crawl === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+${field('news.intervalMin', 'Buscar notícias a cada (min)', 'number', 'min="5" max="120"')}
+${field('news.maxAgeHours', 'Mostrar notícias de até (horas)', 'number', 'min="1" max="72"')}
+${field('news.maxItems', 'Quantas manchetes na fila', 'number', 'min="3" max="40"')}
+<label><span>Esconder notícias com as palavras (separe por vírgula)</span><input type="text" id="newsBlock" value="${esc(n.blockWords.join(', '))}" placeholder="ex.: BBB, horóscopo"></label>
+</div>
+</section>`;
+}
+
 // ---------- cotações ----------
 function quotesPicker() {
   const sel = S.config.quotes.items;
@@ -324,6 +348,8 @@ ${S.config.tela1.clockExtra === 'quotes' ? quotesPicker() : ''}
 </div></section>
 
 ${gifSection()}
+
+${newsSection()}
 
 <section class="card"><h2>Estado da coleta</h2><p class="muted">Se uma fonte falha, o painel mantém o último dado e segue funcionando.</p>
 <div class="status">${statusRows()}</div></section>
@@ -472,6 +498,20 @@ ${item('full', 'Na tela cheia', onFull)}
     S.config.gif = r.config.gif; S.config.tela1 = r.config.tela1; S.config.claudeView.gif = r.config.claudeView.gif;
     render(); toast('GIF apagado.');
   })));
+  app.querySelectorAll('[data-feed]').forEach((el) => el.addEventListener('change', () => {
+    const set = new Set(S.config.news.feeds);
+    if (el.checked) set.add(el.dataset.feed); else set.delete(el.dataset.feed);
+    S.config.news.feeds = NEWS_FEEDS.map((f) => f.id).filter((id) => set.has(id));
+    dirty = true; document.getElementById('save').disabled = false;
+  }));
+  document.getElementById('newsCustom').addEventListener('change', (e) => {
+    S.config.news.custom = e.target.value.split(/\s+/).map((u) => u.trim()).filter(Boolean);
+    dirty = true; document.getElementById('save').disabled = false;
+  });
+  document.getElementById('newsBlock').addEventListener('change', (e) => {
+    S.config.news.blockWords = e.target.value.split(',').map((w) => w.trim()).filter(Boolean);
+    dirty = true; document.getElementById('save').disabled = false;
+  });
   app.querySelectorAll('[data-quote]').forEach((el) => el.addEventListener('change', () => {
     const order = QUOTES.map((q) => q.id);
     const set = new Set(S.config.quotes.items);

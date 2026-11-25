@@ -4,12 +4,15 @@ import { tela2 } from './screens/tela2.js';
 import { tela3 } from './screens/tela3.js';
 import { idle } from './screens/idle.js';
 import { gif } from './screens/gif.js';
+import { news, mount as mountNews } from './screens/news.js';
 import { tick } from '/widgets/clock/view.js';
 import * as burnin from './burnin.js';
 
-const SCREENS = { tela1, tela2, tela3, gif };
+const SCREENS = { tela1, tela2, tela3, gif, news };
+// telas com parte animada própria: chamadas depois que o HTML muda
+const MOUNT = { news: mountNews };
 // telas que só entram na rotação se tiverem conteúdo
-const HAS_CONTENT = { gif: (c) => (c.gif?.items || []).length > 0 };
+const HAS_CONTENT = { gif: (c) => (c.gif?.items || []).length > 0, news: (c, d) => (d.news?.data?.items || []).length > 0 };
 const W = 780, H = 360;
 const qs = new URLSearchParams(location.search);
 const PINNED = qs.get('screen');       // ?screen=tela2 fixa uma tela
@@ -21,7 +24,7 @@ const st = { gifIndex: 0, visit: 0, lastHtml: '', config: null, data: {}, curren
 
 const enabled = () => {
   if (PINNED && SCREENS[PINNED]) return [PINNED];
-  const ids = st.config.screens.filter((s) => s.enabled && SCREENS[s.id] && (!HAS_CONTENT[s.id] || HAS_CONTENT[s.id](st.config))).map((s) => s.id);
+  const ids = st.config.screens.filter((s) => s.enabled && SCREENS[s.id] && (!HAS_CONTENT[s.id] || HAS_CONTENT[s.id](st.config, st.data))).map((s) => s.id);
   return ids.length ? ids : ['tela1'];
 };
 
@@ -40,6 +43,7 @@ function render() {
         const old = keep.get(n.getAttribute('src'));
         if (old) { old.setAttribute('style', n.getAttribute('style') || ''); n.replaceWith(old); keep.delete(n.getAttribute('src')); }
       }
+      if (st.mode !== 'idle' && MOUNT[st.current]) MOUNT[st.current](stage);
     }
   } catch (e) {
     // um widget com dado inesperado não pode deixar a tela em branco

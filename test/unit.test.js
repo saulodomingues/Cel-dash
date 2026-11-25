@@ -152,7 +152,7 @@ test('config: valores fora da faixa são corrigidos e o painel não vê caminhos
   const c = setConfig({ claude: { intervalMin: 1, credentialsFile: '/x' }, pixelShift: { maxPx: 99 }, screens: [{ id: 'tela3', enabled: false }, { id: 'zzz' }], night: { start: 'abc' } });
   assert.equal(c.claude.intervalMin, 5);
   assert.equal(c.pixelShift.maxPx, 8);
-  assert.deepEqual(c.screens.map((s) => s.id), ['tela3', 'tela1', 'tela2', 'gif']);
+  assert.deepEqual(c.screens.map((s) => s.id), ['tela3', 'tela1', 'tela2', 'news', 'gif']);
   assert.equal(c.screens.find((s) => s.id === 'gif').enabled, false);
   assert.equal(c.night.start, '22:00');
   assert.equal(publicConfig().claude.credentialsFile, undefined);
@@ -255,4 +255,30 @@ test('alerta de chuva e qualidade do ar', async () => {
   assert.equal(aqiLevel(38)[2], 'boa'); assert.equal(aqiLevel(120)[2], 'ruim p/ sensíveis'); assert.equal(aqiLevel(null), null);
   assert.deepEqual(parseAir({ current: { us_aqi: 37.6, pm2_5: 9.2 } }), { aqi: 38, pm25: 9.2 });
   assert.equal(parseAir(null), null);
+});
+
+test('manchetes: lê RSS e Atom, decodifica, filtra e mistura as fontes', async () => {
+  const n = await import('../widgets/news/collector.js');
+  const rss = `<?xml version="1.0" encoding="UTF-8"?><rss><channel><title>Site</title>
+<item><title><![CDATA[Frente fria chega &amp; derruba temperaturas]]></title><link>https://x/1</link>
+<pubDate>Wed, 25 Nov 2026 20:00:00 -0300</pubDate><description>&lt;p&gt;Chuva forte no &lt;b&gt;sábado&lt;/b&gt;.&lt;/p&gt;</description></item>
+<item><title>Notícia do BBB 30</title><pubDate>Wed, 25 Nov 2026 19:00:00 -0300</pubDate></item>
+<item><title>Notícia velha</title><pubDate>Mon, 23 Nov 2026 10:00:00 -0300</pubDate></item>
+</channel></rss>`;
+  const a = n.parseFeed(rss, 'Site A');
+  assert.equal(a.length, 3);
+  assert.equal(a[0].title, 'Frente fria chega & derruba temperaturas');
+  assert.equal(a[0].summary, 'Chuva forte no sábado.');
+  assert.equal(a[0].t, Date.parse('2026-11-25T23:00:00Z'));
+  const atom = `<feed><entry><title type="html">Atualização do &#8220;Galaxy&#8221;</title><updated>2026-11-25T22:30:00Z</updated><summary>Resumo</summary></entry></feed>`;
+  const b = n.parseFeed(atom, 'Site B');
+  assert.equal(b[0].title, 'Atualização do “Galaxy”');
+  const latin = new Uint8Array(Buffer.from('<?xml version="1.0" encoding="ISO-8859-1"?><rss><item><title>Ação</title></item></rss>', 'latin1'));
+  assert.equal(n.parseFeed(n.bytesToText(latin), 'F')[0].title, 'Ação');
+  const now = Date.parse('2026-11-26T00:00:00Z');
+  const out = n.mix([a, b, [{ title: 'frente fria chega & derruba temperaturas!', t: now - 60_000, source: 'Dup' }]], { blockWords: ['bbb'], maxAgeHours: 12, maxItems: 10 }, now);
+  assert.ok(!out.some((x) => /BBB/.test(x.title)));            // palavra bloqueada
+  assert.ok(!out.some((x) => x.title === 'Notícia velha'));      // mais antiga que 12 h
+  assert.equal(out.filter((x) => /frente fria/i.test(x.title)).length, 1); // duplicada entre fontes
+  assert.deepEqual(out.map((x) => x.source), ['Site A', 'Site B']); // mais recente primeiro; a cópia de outra fonte sai
 });
