@@ -101,6 +101,10 @@ Tela cheia: quinta opção da rotação, desligada por padrão. Quarta tela (`gi
 
 `config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, nas telas 1 (anéis) e 2 (linha); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 os 7 dias são barras deitadas (um dia por linha, hoje primeiro em âmbar e depois os anteriores, valor = % do limite semanal gasto no dia, sem título) numa coluna fixa (170 px; 150 com 3 anéis; 140 com GIF); os anéis dividem o resto. Com 1 ou 2 anéis eles crescem (108 px, 96 com GIF); com 3 ficam em 78 px; coluna abaixo de 170 px vira formato compacto. O card nunca fica vazio.
 
+## Cotações ao lado do relógio (tela 1)
+
+Terceira opção do espaço ao lado do relógio (`tela1.clockExtra = 'quotes'`), conforme o mock de 25/11/2026 feito no Claude Design (três variações: calendário, cotações, GIF). `widgets/quotes/`: até 6 itens escolhidos em `/admin` → Telas (`quotes.items`, catálogo em `catalog.shared.js`): moedas em R$ e cripto em US$ pela AwesomeAPI (sem chave), índices pelo gráfico do Yahoo Finance (não oficial, ~15 min de atraso). Linha = código, valor curto (5,42 · 98,4 mil · 6.012) e seta verde/vermelha; cabeçalho com a hora da cotação mais antiga. Só busca quando o espaço mostra cotações. Fontes não testadas daqui (rede bloqueada).
+
 ## Calendário ao lado do relógio (tela 1)
 
 Escolhido em 25/11/2026 para o espaço livre do card do relógio. `widgets/calendar/`: mês com hoje marcado, feriados nacionais em vermelho e pontos facultativos (Carnaval, Corpus Christi) em lilás, e a linha "próximo feriado". Feriados calculados no aparelho (Páscoa por Meeus), sem internet. Com ele o relógio cai de 84 para 64 px. Liga/desliga em `/admin` → Telas (`tela1.clockExtra`). Módulos de widget que o navegador precisa além do `view.js` se chamam `*.shared.js`.

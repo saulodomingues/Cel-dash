@@ -190,6 +190,7 @@ async function api(req, res, url) {
     if (JSON.stringify(before.city) !== JSON.stringify(after.city)) scheduler.refresh('weather');
     if (JSON.stringify(before.claude) !== JSON.stringify(after.claude)) scheduler.refresh('claude');
     if (JSON.stringify(before.system) !== JSON.stringify(after.system)) scheduler.refresh('system');
+    if (before.tela1.clockExtra !== after.tela1.clockExtra || JSON.stringify(before.quotes) !== JSON.stringify(after.quotes)) scheduler.refresh('quotes');
     return send(res, 200, { config: after, portChanged: before.port !== after.port });
   }
   if (p === '/api/admin/claude/login' && m === 'POST') {

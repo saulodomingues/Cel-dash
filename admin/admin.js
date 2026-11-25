@@ -1,8 +1,9 @@
+import { CATALOG as QUOTES, MAX_QUOTES as MAX_Q } from '/widgets/quotes/catalog.shared.js';
 // /admin: telas e configurações. Funciona no navegador do PC e no próprio celular.
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol e Claude em linha'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'], gif: ['GIF', 'Só a imagem animada, em tela cheia. Envie abaixo.'] };
-const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S20' };
+const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S20', quotes: 'Cotações' };
 let S = null; // { config, secrets, status, server, demo }
 let dirty = false;
 
@@ -195,6 +196,18 @@ ${items.map((i) => `<option value="${esc(i.file)}" ${S.config.gif.full === i.fil
 </section>`;
 }
 
+// ---------- cotações ----------
+function quotesPicker() {
+  const sel = S.config.quotes.items;
+  const groups = [['fx', 'Moedas (em R$)'], ['crypto', 'Cripto (em US$)'], ['index', 'Bolsas (uns 15 min de atraso)']];
+  return `</div><div style="margin-top:12px"><p class="muted">Cotações ao lado do relógio: escolha até ${MAX_Q} (${sel.length} escolhidas). Aparecem na ordem desta lista.</p>
+${groups.map(([k, t]) => `<div style="margin-top:8px"><div class="muted">${t}</div><div class="qgrid">${QUOTES.filter((q) => q.kind === k).map((q) => `
+<label class="check"><input type="checkbox" data-quote="${q.id}" ${sel.includes(q.id) ? 'checked' : ''} ${!sel.includes(q.id) && sel.length >= MAX_Q ? 'disabled' : ''}>${esc(q.name)}</label>`).join('')}</div></div>`).join('')}
+${S.status.quotes?.data?.errors?.length ? `<p class="err" style="margin-top:8px">${esc(S.status.quotes.data.errors.join(' · '))}</p>` : ''}
+</div><div class="grid" style="margin-top:12px">
+${field('quotes.intervalMin', 'Atualizar cotações a cada (min)', 'number', 'min="2" max="120"')}`;
+}
+
 const COUNTER_NAMES = { session: ['Sessão de 5 h', 'some sozinho em plano sem esse limite'], model: ['Semana do modelo', 'Fable, ou o escolhido em Claude'], week: ['Semana, todos modelos', ''] };
 function counterList() {
   const list = S.config.claudeView.counters;
@@ -295,9 +308,11 @@ ${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'che
 <div class="grid" style="margin-top:12px">
 <label>Ao lado do relógio (tela principal)<select data-path="tela1.clockExtra">
 <option value="calendar" ${S.config.tela1.clockExtra === 'calendar' ? 'selected' : ''}>Calendário do mês com feriados</option>
+<option value="quotes" ${S.config.tela1.clockExtra === 'quotes' ? 'selected' : ''}>Cotações (moedas, cripto e bolsas)</option>
 ${S.config.tela1.clockExtra === 'gif' ? '<option value="gif" selected>GIF (escolhido na seção GIFs)</option>' : ''}
 <option value="none" ${S.config.tela1.clockExtra === 'none' ? 'selected' : ''}>Nada (relógio grande)</option>
 </select></label>
+${S.config.tela1.clockExtra === 'quotes' ? quotesPicker() : ''}
 </div></section>
 
 ${gifSection()}
@@ -446,6 +461,13 @@ ${item('full', 'Na tela cheia', onFull)}
     S.config.gif = r.config.gif; S.config.tela1 = r.config.tela1; S.config.claudeView.gif = r.config.claudeView.gif;
     render(); toast('GIF apagado.');
   })));
+  app.querySelectorAll('[data-quote]').forEach((el) => el.addEventListener('change', () => {
+    const order = QUOTES.map((q) => q.id);
+    const set = new Set(S.config.quotes.items);
+    if (el.checked) set.add(el.dataset.quote); else set.delete(el.dataset.quote);
+    S.config.quotes.items = order.filter((id) => set.has(id)).slice(0, MAX_Q);
+    dirty = true; render();
+  }));
   app.querySelectorAll('[data-counter]').forEach((el) => el.addEventListener('change', () => {
     S.config.claudeView.counters[Number(el.dataset.counter)].enabled = el.checked;
     dirty = true; render();

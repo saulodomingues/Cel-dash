@@ -209,3 +209,25 @@ test('brilho pelo Termux: dia, noite e horário de apagar', async () => {
   assert.equal(target(at(3, 0), cfg), 0);
   assert.equal(target(at(3, 0), { ...cfg, sleep: { ...cfg.sleep, enabled: false } }), Math.round(0.08 * 255));
 });
+
+test('cotações: leitura da AwesomeAPI e do Yahoo, e valores curtos', async () => {
+  const q = await import('../widgets/quotes/collector.js');
+  const { CATALOG, fmtQuote } = await import('../widgets/quotes/catalog.shared.js');
+  const pick = (...ids) => ids.map((id) => CATALOG.find((c) => c.id === id));
+  const aw = q.parseAwesome({
+    USDBRL: { code: 'USD', codein: 'BRL', bid: '5.4213', pctChange: '0.21', timestamp: '1764072000' },
+    BTCUSD: { code: 'BTC', codein: 'USD', bid: '98412.5', pctChange: '-1.3', timestamp: '1764072000' },
+  }, pick('USD', 'BTC', 'EUR'));
+  assert.equal(aw.USD.value, 5.4213); assert.equal(aw.USD.pct, 0.21); assert.equal(aw.USD.at, 1764072000000);
+  assert.equal(aw.BTC.pct, -1.3);
+  assert.equal(aw.EUR, undefined); // não veio: fica de fora
+  const y = q.parseYahoo({ chart: { result: [{ meta: { regularMarketPrice: 131200.5, chartPreviousClose: 132000, regularMarketTime: 1764072000 } }], error: null } });
+  assert.equal(y.value, 131200.5); assert.ok(y.pct < 0);
+  assert.equal(q.parseYahoo({ chart: { result: null, error: { code: 'Not Found' } } }), null);
+  assert.equal(fmtQuote(5.4213, 'fx'), '5,42');
+  assert.equal(fmtQuote(98412.5, 'crypto'), '98,4 mil');
+  assert.equal(fmtQuote(3410, 'crypto'), '3,41 mil');
+  assert.equal(fmtQuote(6012.3, 'index'), '6.012');
+  assert.equal(fmtQuote(131200.5, 'index'), '131,2 mil');
+  assert.equal(fmtQuote(0.0054, 'fx'), '0,0054');
+});

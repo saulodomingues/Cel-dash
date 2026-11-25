@@ -79,3 +79,5 @@ input[type=file]::file-selector-button { background: var(--amber); color: #000; 
 .ctxmenu .tick { width: 14px; color: var(--amber); }
 .ctxmenu .danger { color: #F87171; }
 .ctxmenu hr { border: 0; border-top: 1px solid #2A2D33; margin: 4px 2px; }
+
+.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0 12px; }

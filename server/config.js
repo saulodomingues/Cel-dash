@@ -2,6 +2,7 @@
 // Os segredos nunca saem do servidor: nenhuma rota devolve o conteúdo deste arquivo.
 import fs from 'node:fs';
 import path from 'node:path';
+import { CATALOG, MAX_QUOTES } from '../widgets/quotes/catalog.shared.js';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -21,7 +22,7 @@ export const DEFAULTS = {
     { id: 'gif', enabled: false }, // tela cheia de GIF: desligada por padrão; só entra na rotação se houver imagem
   ],
   gif: { items: [], fit: 'contain', full: '*' }, // items: [{ file, name }] em data/media; full: GIF da tela cheia ('*' = alterna)
-  tela1: { clockExtra: 'calendar', clockGif: '*' }, // clockExtra: 'calendar' | 'gif' | 'none'; clockGif: arquivo em data/media ou '*' = alterna entre todos
+  tela1: { clockExtra: 'calendar', clockGif: '*' }, // clockExtra: 'calendar' | 'quotes' | 'gif' | 'none'; clockGif: arquivo em data/media ou '*' = alterna entre todos
   // contadores do Claude nas telas 1 e 2: quais e em que ordem; estatística de 7 dias na tela 1
   claudeView: {
     counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }],
@@ -40,6 +41,7 @@ export const DEFAULTS = {
   idle: { enabled: true, afterMin: 10, offAfterMin: 20 },
   update: { enabled: true, intervalMin: 5 },
   weather: { intervalMin: 15 },
+  quotes: { items: ['USD', 'EUR', 'BTC', 'ETH', 'IBOV', 'SPX'], intervalMin: 5 }, // ids de widgets/quotes/catalog.shared.js, até 6
   claude: {
     intervalMin: 10,
     source: 'manual', // 'manual' = login feito no /admin (ou credenciais coladas); 'file' = arquivo do Claude Code
@@ -92,11 +94,13 @@ function sanitize(c) {
   if (!got.some((g) => g.enabled) && !c.claudeView.showStats) c.claudeView.showStats = true; // card nunca vazio
   c.claudeView.counters = got;
   if (c.claudeView.gif !== '*' && !c.gif.items.some((i) => i.file === c.claudeView.gif)) c.claudeView.gif = '';
+  c.quotes.items = [...new Set(c.quotes.items.filter((id) => CATALOG.some((q) => q.id === id)))].slice(0, MAX_QUOTES);
+  c.quotes.intervalMin = clamp(Math.round(c.quotes.intervalMin), 2, 120);
   c.display.browser = c.display.browser === 'fully' ? 'fully' : 'chrome';
   c.gif.fit = c.gif.fit === 'cover' ? 'cover' : 'contain';
   c.gif.items = c.gif.items.filter((i) => i && /^[a-f0-9]{16}\.(gif|png|jpg|webp)$/.test(i.file)).map((i) => ({ file: i.file, name: String(i.name || i.file).slice(0, 80) }));
   if (c.gif.full !== '*' && !c.gif.items.some((i) => i.file === c.gif.full)) c.gif.full = '*';
-  c.tela1.clockExtra = ['calendar', 'gif', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
+  c.tela1.clockExtra = ['calendar', 'quotes', 'gif', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
   if (c.tela1.clockGif !== '*' && !c.gif.items.some((i) => i.file === c.tela1.clockGif)) c.tela1.clockGif = '*';
   c.port = clamp(Math.round(c.port), 1024, 65535);
   c.city.lat = clamp(c.city.lat, -90, 90);
