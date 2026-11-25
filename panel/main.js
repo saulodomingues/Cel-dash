@@ -151,7 +151,14 @@ if (!PREVIEW) {
 }
 
 addEventListener('resize', layout);
-connect();
-setTimeout(poll, 3000);
-setInterval(poll, 30_000);
+// As miniaturas do /admin (?preview) não abrem conexão contínua: o navegador permite só 6
+// conexões por endereço, e 4 miniaturas + o painel em outra aba travavam o envio de GIFs.
+if (PREVIEW) {
+  poll();
+  setInterval(poll, 30_000);
+} else {
+  connect();
+  setTimeout(poll, 3000);
+  setInterval(poll, 30_000);
+}
 setInterval(loop, 1000);
