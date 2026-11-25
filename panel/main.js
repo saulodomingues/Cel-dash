@@ -81,10 +81,7 @@ function loop() {
 }
 
 // ---------- dados ----------
-function connect() {
-  const es = new EventSource('/events');
-  es.addEventListener('state', (e) => {
-    const s = JSON.parse(e.data);
+function applyState(s) {
     // o servidor voltou com outra versão (atualização automática): recarrega para pegar o código novo
     if (st.version && s.version !== st.version) return location.reload();
     st.version = s.version;
@@ -92,6 +89,21 @@ function connect() {
     if (!st.current) st.current = enabled()[0];
     render(); layout();
     stage.style.opacity = '1';
+}
+
+// Plano B: se o SSE não chegar (antivírus ou proxy segurando a conexão), busca o estado de tempos em tempos.
+let lastEvent = 0;
+async function poll() {
+  if (Date.now() - lastEvent < 60_000) return;
+  try { applyState(await (await fetch('/api/state', { cache: 'no-store' })).json()); } catch { /* servidor fora; tenta de novo */ }
+}
+
+function connect() {
+  const es = new EventSource('/events');
+  es.onmessage = () => { lastEvent = Date.now(); };
+  for (const ev of ['state', 'data', 'config']) es.addEventListener(ev, () => { lastEvent = Date.now(); });
+  es.addEventListener('state', (e) => {
+    applyState(JSON.parse(e.data));
   });
   es.addEventListener('data', (e) => {
     const { id, state } = JSON.parse(e.data);
@@ -125,4 +137,6 @@ if (!PREVIEW) {
 
 addEventListener('resize', layout);
 connect();
+setTimeout(poll, 3000);
+setInterval(poll, 30_000);
 setInterval(loop, 1000);
