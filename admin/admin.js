@@ -89,6 +89,10 @@ function screensList() {
 <div class="thumb"><iframe src="/?preview&screen=${s.id}" title="Prévia: ${esc(name)}" loading="lazy" tabindex="-1"></iframe></div>
 <div class="info"><b>${i + 1}. ${esc(name)}</b><div class="muted">${esc(desc)}</div>
 <label class="check"><input type="checkbox" data-screen="${i}" ${s.enabled ? 'checked' : ''}>Mostrar na rotação</label>
+<div class="row" style="align-items:center;gap:8px;margin:2px 0 4px">
+${s.id === 'news' ? `<select data-sauto="${i}" aria-label="Tempo da tela ${esc(name)}" style="width:auto"><option value="auto" ${s.auto ? 'selected' : ''}>Automático: todas as manchetes uma vez</option><option value="fixo" ${s.auto ? '' : 'selected'}>Tempo fixo</option></select>` : ''}
+${s.id !== 'news' || !s.auto ? `<span class="muted">Fica na tela</span><input type="number" data-sdur="${i}" min="10" max="3600" value="${s.seconds ?? ''}" placeholder="${S.config.rotation.intervalSec}" style="width:84px" aria-label="Segundos na tela ${esc(name)}"><span class="muted">s${s.seconds == null ? ' (o geral)' : ''}</span>` : ''}
+</div>
 ${s.id === 'news' ? `<label class="check"><input type="checkbox" data-path="news.ticker" ${S.config.news.ticker ? 'checked' : ''}>Letreiro "AGORA" na tela principal</label>` : ''}</div>
 <div class="moves"><button data-move="${i}:-1" aria-label="Subir ${esc(name)}" ${i === 0 ? 'disabled' : ''}>↑</button><button data-move="${i}:1" aria-label="Descer ${esc(name)}" ${i === S.config.screens.length - 1 ? 'disabled' : ''}>↓</button></div>
 </div>`;
@@ -325,10 +329,10 @@ function render() {
 <div class="row"><a href="/">Voltar ao painel</a><button id="logout">Sair</button></div>
 </header>
 
-<section class="card"><h2>Telas</h2><p class="muted">Ordem e quais entram na rotação. A troca passa pelo preto; as três têm divisões e cantos de relógio diferentes de propósito.</p>
+<section class="card"><h2>Telas</h2><p class="muted">Ordem, quais entram na rotação e quanto tempo cada uma fica. A troca passa pelo preto.</p>
 <div class="screens">${screensList()}</div>
 <div class="grid" style="margin-top:12px">
-${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20" max="3600"')}
+${field('rotation.intervalSec', 'Tempo geral por tela (s), para quem estiver vazio', 'number', 'min="20" max="3600"')}
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 </div>
 <div class="grid" style="margin-top:12px">
@@ -529,6 +533,17 @@ ${item('full', 'Na tela cheia', onFull)}
   app.querySelectorAll('[data-cmove]').forEach((el) => el.addEventListener('click', () => {
     const [i, d] = el.dataset.cmove.split(':').map(Number);
     const a = S.config.claudeView.counters; [a[i], a[i + d]] = [a[i + d], a[i]];
+    dirty = true; render();
+  }));
+  app.querySelectorAll('[data-sdur]').forEach((el) => el.addEventListener('change', () => {
+    const v = el.value.trim();
+    S.config.screens[Number(el.dataset.sdur)].seconds = v === '' ? null : Number(v);
+    dirty = true; document.getElementById('save').disabled = false;
+  }));
+  app.querySelectorAll('[data-sauto]').forEach((el) => el.addEventListener('change', () => {
+    const sc = S.config.screens[Number(el.dataset.sauto)];
+    sc.auto = el.value === 'auto';
+    if (!sc.auto && sc.seconds == null) sc.seconds = 180;
     dirty = true; render();
   }));
   app.querySelectorAll('[data-move]').forEach((el) => el.addEventListener('click', () => {

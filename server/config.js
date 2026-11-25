@@ -17,11 +17,13 @@ export const DEFAULTS = {
   port: 8080,
   city: { name: 'São Paulo', lat: -23.5475, lon: -46.6361 },
   screens: [
-    { id: 'tela1', enabled: true },
-    { id: 'tela2', enabled: true },
-    { id: 'tela3', enabled: true },
-    { id: 'news', enabled: true }, // manchetes: só entra na rotação se houver manchetes
-    { id: 'gif', enabled: false }, // tela cheia de GIF: desligada por padrão; só entra na rotação se houver imagem
+    // seconds: quanto tempo a tela fica (null = o geral, rotation.intervalSec); auto (só manchetes):
+    // fica o tempo de mostrar todas as manchetes uma vez
+    { id: 'tela1', enabled: true, seconds: 180 },
+    { id: 'tela2', enabled: true, seconds: 60 },
+    { id: 'tela3', enabled: true, seconds: 45 },
+    { id: 'news', enabled: true, seconds: null, auto: true }, // manchetes: só entra na rotação se houver manchetes
+    { id: 'gif', enabled: false, seconds: 30 }, // tela cheia de GIF: desligada por padrão; só entra na rotação se houver imagem
   ],
   gif: { items: [], fit: 'contain', full: '*' }, // items: [{ file, name }] em data/media; full: GIF da tela cheia ('*' = alterna)
   tela1: { clockExtra: 'calendar', clockGif: '*' }, // clockExtra: 'calendar' | 'quotes' | 'gif' | 'none'; clockGif: arquivo em data/media ou '*' = alterna entre todos
@@ -81,6 +83,16 @@ function merge(base, over) {
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 const hhmm = (s, d) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(s) ? s : d);
 
+// Tempo por tela: sem o campo (config antiga), usa o padrão daquela tela; null usa o tempo geral.
+function screenCfg(s) {
+  const d = DEFAULTS.screens.find((x) => x.id === s.id);
+  const raw = s.seconds === undefined ? d.seconds : s.seconds;
+  const n = Number(raw);
+  const out = { id: s.id, enabled: s.enabled !== false, seconds: raw === null || raw === '' || !Number.isFinite(n) ? null : clamp(Math.round(n), 10, 3600) };
+  if (s.id === 'news') out.auto = s.auto === undefined ? d.auto : s.auto === true;
+  return out;
+}
+
 function sanitize(c) {
   const known = DEFAULTS.screens.map((s) => s.id);
   const seen = new Set();
@@ -88,9 +100,9 @@ function sanitize(c) {
   for (const s of c.screens) {
     if (!s || !known.includes(s.id) || seen.has(s.id)) continue;
     seen.add(s.id);
-    screens.push({ id: s.id, enabled: s.enabled !== false });
+    screens.push(screenCfg(s));
   }
-  for (const id of known) if (!seen.has(id)) screens.push({ id, enabled: DEFAULTS.screens.find((d) => d.id === id).enabled });
+  for (const id of known) if (!seen.has(id)) screens.push({ ...DEFAULTS.screens.find((d) => d.id === id) });
   c.screens = screens;
   const ids = ['session', 'model', 'week'], got = [];
   for (const x of c.claudeView.counters) if (x && ids.includes(x.id) && !got.some((g) => g.id === x.id)) got.push({ id: x.id, enabled: x.enabled !== false });

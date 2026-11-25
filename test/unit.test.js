@@ -154,6 +154,11 @@ test('config: valores fora da faixa são corrigidos e o painel não vê caminhos
   assert.equal(c.pixelShift.maxPx, 8);
   assert.deepEqual(c.screens.map((s) => s.id), ['tela3', 'tela1', 'tela2', 'news', 'gif']);
   assert.equal(c.screens.find((s) => s.id === 'gif').enabled, false);
+  // tempo por tela: padrão para config antiga, null = geral, limites e automático só nas manchetes
+  assert.equal(c.screens.find((s) => s.id === 'tela1').seconds, 180);
+  assert.equal(c.screens.find((s) => s.id === 'news').auto, true);
+  const c2 = setConfig({ screens: [{ id: 'tela1', seconds: 5 }, { id: 'tela2', seconds: null }, { id: 'news', auto: false, seconds: '240' }] });
+  assert.deepEqual(c2.screens.slice(0, 3), [{ id: 'tela1', enabled: true, seconds: 10 }, { id: 'tela2', enabled: true, seconds: null }, { id: 'news', enabled: true, seconds: 240, auto: false }]);
   assert.equal(c.night.start, '22:00');
   assert.equal(publicConfig().claude.credentialsFile, undefined);
 });

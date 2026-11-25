@@ -144,6 +144,8 @@ Decidido na conversa, em ordem de importância:
 
 Configuráveis no `/admin`: horário noturno, brilho dia/noite, tempo até apagar, intervalo do pixel shift e da rotação.
 
+Tempo por tela (25/11/2026): cada item de `screens` tem `seconds` (null = o geral, `rotation.intervalSec`); padrões Principal 180 s, Tempo 60 s, Sistema 45 s, GIF 30 s. Manchetes tem `auto` (padrão): fica o tempo de passar todas as manchetes uma vez (nº de manchetes × `news.seconds`, mínimo 30 s), ou tempo fixo.
+
 ## Fontes de dados
 
 - **Tempo**: Open-Meteo, gratuito e sem chave. Sugerido na conversa; não testado.

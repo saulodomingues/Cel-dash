@@ -76,6 +76,17 @@ function show(id) {
   }, 450);
 }
 
+// Quanto tempo a tela fica: o dela, ou o geral. Manchetes no automático: o tempo de passar
+// todas as manchetes uma vez (mínimo de 30 s).
+function screenMs(id) {
+  const sc = st.config.screens.find((s) => s.id === id) || {};
+  if (id === 'news' && sc.auto) {
+    const n = (st.data.news?.data?.items || []).length;
+    if (n) return Math.max(30, n * st.config.news.seconds) * 1000 + 1000;
+  }
+  return (sc.seconds || st.config.rotation.intervalSec) * 1000;
+}
+
 function next() {
   const ids = enabled();
   const i = ids.indexOf(st.current);
@@ -94,7 +105,7 @@ function loop() {
   }
   if (!PREVIEW && st.config.display?.browser === 'fully') burnin.apply(now, st.config, m);
   if (!enabled().includes(st.current)) st.current = enabled()[0];
-  if (m === 'on' && !PINNED && now - st.lastRotate >= st.config.rotation.intervalSec * 1000) next();
+  if (m === 'on' && !PINNED && now - st.lastRotate >= screenMs(st.current)) next();
   const minute = Math.floor(now / 60_000);
   if (minute !== st.lastMinute) { st.lastMinute = minute; if (!st.fading) render(); }
   tick(stage, now);
