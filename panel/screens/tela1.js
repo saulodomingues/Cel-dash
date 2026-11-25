@@ -6,11 +6,12 @@ import { clockMood, skyMood } from '/panel/mood.js';
 import { miniCalendar } from '/widgets/calendar/view.js';
 import { gifWidget } from '/widgets/gif/view.js';
 import { quotesWidget } from '/widgets/quotes/view.js';
-import { tickerBar, mountTicker } from '/widgets/news/ticker.view.js';
+import { tickerBar, mountTicker, saveTicker } from '/widgets/news/ticker.view.js';
 
 const CARD = 'background: #0D0E10; border: 1px solid #1C1E22; border-radius: 14px; padding: 12px 16px; display: flex; flex-direction: column';
 
 export const mount = mountTicker;
+export const beforeLeave = saveTicker;
 
 export function tela1({ data, config, now, visit = 0 }) {
   const clk = clockMood(now, data.weather);

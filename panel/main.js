@@ -1,5 +1,5 @@
 // Painel: recebe dados e configuração por SSE, alterna as telas e cuida do burn-in.
-import { tela1, mount as mountTela1 } from './screens/tela1.js';
+import { tela1, mount as mountTela1, beforeLeave as leaveTela1 } from './screens/tela1.js';
 import { tela2 } from './screens/tela2.js';
 import { tela3 } from './screens/tela3.js';
 import { idle } from './screens/idle.js';
@@ -11,6 +11,8 @@ import * as burnin from './burnin.js';
 const SCREENS = { tela1, tela2, tela3, gif, news };
 // telas com parte animada própria: chamadas depois que o HTML muda
 const MOUNT = { news: mountNews, tela1: mountTela1 };
+// chamadas antes de trocar o conteúdo (guardam estado, ex.: onde o letreiro parou)
+const BEFORE = [leaveTela1];
 // telas que só entram na rotação se tiverem conteúdo
 const HAS_CONTENT = { gif: (c) => (c.gif?.items || []).length > 0, news: (c, d) => (d.news?.data?.items || []).length > 0 };
 const W = 780, H = 360;
@@ -39,6 +41,7 @@ function render() {
       // imagens marcadas com data-keep (GIFs) voltam as mesmas: a animação segue sem reiniciar
       // elementos com data-keep (GIFs, letreiro) voltam os mesmos: a animação segue sem reiniciar
       const keyOf = (el) => el.getAttribute('data-keep') || el.getAttribute('src');
+      for (const fn of BEFORE) fn(stage);
       const keep = new Map([...stage.querySelectorAll('[data-keep]')].map((el) => [keyOf(el), el]));
       stage.innerHTML = html; st.lastHtml = html;
       for (const n of stage.querySelectorAll('[data-keep]')) {

@@ -19,11 +19,24 @@ export function tickerBar(items, crawl) {
 </div>`;
 }
 
-// Ajusta a duração para a velocidade ficar constante, seja qual for o tamanho do texto.
+// Onde o letreiro parou: guardado ao sair da tela, para continuar dali quando ela voltar.
+const saved = { key: '', ms: 0 };
+
+// Chamado pelo painel antes de trocar o conteúdo da tela.
+export function saveTicker(root) {
+  const bar = root.querySelector('[data-keep^="ticker-"]');
+  const anim = bar?.querySelector('[data-ticker-track]')?.getAnimations?.()[0];
+  if (anim && anim.currentTime != null) Object.assign(saved, { key: bar.dataset.keep, ms: anim.currentTime });
+}
+
+// Ajusta a duração para a velocidade ficar constante, seja qual for o tamanho do texto,
+// e retoma do ponto onde parou se as manchetes forem as mesmas.
 export function mountTicker(root) {
   const bar = root.querySelector('[data-keep^="ticker-"]');
   const track = bar?.querySelector('[data-ticker-track]');
   if (!track || track.dataset.ready) return;
   track.dataset.ready = '1';
-  track.style.animationDuration = `${Math.max(10, (track.scrollWidth + track.parentElement.clientWidth) / Number(bar.dataset.speed || 70))}s`;
+  const dur = Math.max(10, (track.scrollWidth + track.parentElement.clientWidth) / Number(bar.dataset.speed || 70));
+  track.style.animationDuration = `${dur}s`;
+  if (saved.key === bar.dataset.keep && saved.ms > 0) track.style.animationDelay = `-${(saved.ms / 1000) % dur}s`;
 }
