@@ -48,6 +48,8 @@ Em "Opções avançadas" continuam disponíveis colar o `.credentials.json` do C
 
 O servidor confere o GitHub a cada 5 minutos (ajustável em `/admin` → Atualização). Havendo versão nova no ramo que o celular clonou, ele baixa, reinicia sozinho e o painel recarrega. Configurações, credenciais e histórico ficam em `data/`, fora do git, e não são tocados. Dá para forçar pelo botão "Buscar atualização agora".
 
+**Repositório privado:** antes de fechar o repositório, salve em `/admin` → Atualização um *fine-grained token* do GitHub, só deste repositório, com leitura em "Contents", e clique em "Testar acesso". O token fica em `data/secrets.json` no celular e vai apenas no cabeçalho da chamada ao git.
+
 Isso só vale com o servidor iniciado pelo `scripts/run.sh` (é o que a instalação configura). Arquivos do projeto editados à mão no celular travam a atualização; o motivo aparece no `/admin`.
 
 ## Uso
