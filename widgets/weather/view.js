@@ -119,3 +119,31 @@ export function sunArc(w, now) {
 <div style="display: flex; justify-content: space-between; font-size: 11px; color: #9AA0A6"><span>nasce ${rise ? hm(rise) : '—'}</span><span>põe ${set ? hm(set) : '—'}</span></div>
 <div style="font-size: 12px; color: #C4C7CC">${text}</div>`;
 }
+
+// Tela 2, no lugar da linha do Claude: chuva hoje, umidade e índice UV, com barras finas.
+const UV = [[3, '#4ADE80', 'baixo'], [6, '#F5D33D', 'moderado'], [8, '#FB8C3C', 'alto'], [11, '#F87171', 'muito alto'], [Infinity, '#C58AF9', 'extremo']];
+export function todayStats(w) {
+  const d = w?.data;
+  const t = d?.today || {};
+  const hum = d?.current?.humidity;
+  const uv = typeof t.uvMax === 'number' ? t.uvMax : null;
+  const uvCat = uv === null ? null : UV.find(([lim]) => uv < lim);
+  const rain = typeof t.rainMax === 'number' ? t.rainMax : null;
+  const rainSub = rain === null ? '' : [
+    t.rainPeakAt && t.rainPeak >= 20 ? `pico às ${pad(new Date(t.rainPeakAt).getHours())}h` : rain < 20 ? 'pouca chance' : 'já passou o pico',
+    typeof t.rainMm === 'number' && t.rainMm >= 0.1 ? `${num(t.rainMm, 1)} mm` : '',
+  ].filter(Boolean).join(' · ');
+  const item = (label, value, pctBar, color, sub) => `
+<div style="flex: 1; min-width: 0">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 11px; color: #9AA0A6">${label}</span><span style="${SG}; font-size: 20px; font-weight: 500; color: #C4C7CC">${value}</span></div>
+<div style="height: 3px; border-radius: 2px; background: #1C1E22; margin-top: 4px"><div style="width: ${pctBar === null ? 0 : Math.max(0, Math.min(100, pctBar))}%; height: 3px; border-radius: 2px; background: ${color}"></div></div>
+<div style="font-size: 10px; color: #6B7078; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">${sub || '&nbsp;'}</div>
+</div>`;
+  return `
+<div style="${LABEL}">Hoje${d ? '' : ' · sem dados'}</div>
+<div style="display: flex; gap: 16px">
+${item('Chuva', rain === null ? '—' : pct(rain), rain, '#8AB4F8', rainSub)}
+${item('Umidade', typeof hum === 'number' ? pct(hum) : '—', hum ?? null, '#8AB4F8', typeof hum === 'number' ? (hum >= 80 ? 'abafado' : hum <= 30 ? 'ar seco' : '') : '')}
+${item('UV máx', uv === null ? '—' : num(uv, 0), uv === null ? null : (uv / 11) * 100, uvCat ? uvCat[1] : '#1C1E22', uvCat ? uvCat[2] : '')}
+</div>`;
+}

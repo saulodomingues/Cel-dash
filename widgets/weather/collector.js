@@ -39,10 +39,23 @@ export function normalize(j, city, now = Date.now()) {
   for (let i = t0 + 1; i < Math.min(t0 + 6, d.time.length); i++) {
     days.push({ t: ts(`${d.time[i]}T12:00`), max: d.temperature_2m_max[i], min: d.temperature_2m_min[i], ...describe(d.weather_code[i]) });
   }
+  // hoje: chance máxima de chuva, hora do pico (das horas que ainda faltam), milímetros e UV máximo
+  const left = [];
+  for (let i = i0; i < times.length && new Date(times[i]).toDateString() === new Date(now).toDateString(); i++) left.push(i);
+  const peak = left.reduce((b, i) => ((h.precipitation_probability?.[i] ?? -1) > (h.precipitation_probability?.[b] ?? -1) ? i : b), left[0] ?? i0);
+  const pick = (arr) => (Array.isArray(arr) && typeof arr[t0] === 'number' ? arr[t0] : null);
   return {
     city: city.name,
+    today: {
+      rainMax: pick(d.precipitation_probability_max),
+      rainPeakAt: left.length && (h.precipitation_probability?.[peak] ?? 0) > 0 ? times[peak] : null,
+      rainPeak: left.length ? h.precipitation_probability?.[peak] ?? null : null,
+      rainMm: pick(d.precipitation_sum),
+      uvMax: pick(d.uv_index_max),
+    },
     current: {
       temp: c.temperature_2m, feels: c.apparent_temperature, wind: c.wind_speed_10m,
+      humidity: typeof c.relative_humidity_2m === 'number' ? c.relative_humidity_2m : null,
       rain: hours[0]?.rain ?? null, ...describe(c.weather_code, c.is_day !== 0),
     },
     hours, days,
@@ -54,9 +67,9 @@ export async function collect({ config }) {
   const { lat, lon } = config.city;
   const url = 'https://api.open-meteo.com/v1/forecast' +
     `?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=7&wind_speed_unit=kmh` +
-    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day' +
+    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,relative_humidity_2m' +
     '&hourly=temperature_2m,precipitation_probability' +
-    '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset';
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,uv_index_max';
   const r = await fetch(url, { signal: AbortSignal.timeout(15_000) });
   if (!r.ok) throw new Error(`Open-Meteo respondeu ${r.status}`);
   return normalize(await r.json(), config.city);
@@ -73,7 +86,8 @@ export function demo({ config }) {
   const fc = [[27, 18, 2], [29, 19, 0], [24, 17, 61], [26, 18, 3], [28, 19, 1]];
   return {
     city: config.city.name,
-    current: { temp: 21, feels: 22, wind: 12, rain: 82, text: 'Chuva fraca', icon: 'rain' },
+    current: { temp: 21, feels: 22, wind: 12, rain: 82, humidity: 78, text: 'Chuva fraca', icon: 'rain' },
+    today: { rainMax: 80, rainPeak: 70, rainPeakAt: hour + 2 * 3600_000, rainMm: 6.4, uvMax: 7.2 },
     hours: temps.map((temp, i) => ({ t: hour + i * 3600_000, temp, rain: rain[i] })),
     days: fc.map(([max, min, code], i) => ({ t: day(i + 1, 12, 0), max, min, ...describe(code) })),
     sun: { rises: [0, 1, 2].map((i) => day(i, 5, 12)), sets: [0, 1, 2].map((i) => day(i, 18, 34)) },

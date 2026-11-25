@@ -125,12 +125,13 @@ test('tempo: normaliza a resposta do Open-Meteo', () => {
   }
   const days = [0, 1, 2, 3, 4, 5, 6].map((i) => new Date(2026, 10, 25 + i));
   const j = {
-    current: { temperature_2m: 21.4, apparent_temperature: 22.1, weather_code: 61, wind_speed_10m: 12.3, is_day: 0 },
+    current: { temperature_2m: 21.4, apparent_temperature: 22.1, weather_code: 61, wind_speed_10m: 12.3, is_day: 0, relative_humidity_2m: 81 },
     hourly,
     daily: {
       time: days.map(iso), weather_code: [61, 2, 0, 61, 3, 1, 95],
       temperature_2m_max: [26, 27, 29, 24, 26, 28, 30], temperature_2m_min: [18, 18, 19, 17, 18, 19, 20],
       sunrise: days.map((d) => `${iso(d)}T05:12`), sunset: days.map((d) => `${iso(d)}T18:34`),
+      precipitation_probability_max: [70, 10, 0, 90, 20, 5, 60], precipitation_sum: [4.2, 0, 0, 12, 1, 0, 3], uv_index_max: [7.4, 9, 10, 3, 6, 8, 5],
     },
   };
   const now = new Date(2026, 10, 25, 3, 20).getTime();
@@ -142,6 +143,9 @@ test('tempo: normaliza a resposta do Open-Meteo', () => {
   assert.equal(w.days.length, 5);
   assert.equal(w.days[0].max, 27); // amanhã
   assert.equal(new Date(w.sun.rises[0]).getHours(), 5);
+  assert.equal(w.current.humidity, 81);
+  assert.deepEqual([w.today.rainMax, w.today.rainMm, w.today.uvMax], [70, 4.2, 7.4]);
+  assert.equal(new Date(w.today.rainPeakAt).getHours(), 23); // maior chance nas horas que faltam de hoje (prob. = i % 100)
 });
 
 test('config: valores fora da faixa são corrigidos e o painel não vê caminhos', () => {

@@ -75,7 +75,7 @@ Arquivos: `mocks/telaN.html` (HTML estático, abre direto no navegador) e `mocks
 
 **Tela 2: tempo em detalhe**
 - Faixa de cima: curva de temperatura das próximas 24 h, com chance de chuva por hora em barras azuis.
-- Embaixo: arco do sol (nascer, pôr, quanto falta), Claude em uma linha fina (sessão, Fable, semana) e relógio pequeno no canto inferior direito.
+- Embaixo: arco do sol (nascer, pôr, quanto falta), "Hoje" com chuva (chance máxima, hora do pico, mm), umidade e UV máximo (cor de risco) no lugar da linha do Claude (trocado a pedido em 25/11/2026), e relógio pequeno no canto inferior direito.
 
 **Tela 3: saúde do sistema**
 - Coluna esquerda: bateria e limite de carga, temperatura, tempo do servidor no ar, memória livre, sinal do Wi-Fi, status da VPN no Pi; relógio no canto inferior esquerdo.
@@ -99,7 +99,7 @@ Tela cheia: quinta opção da rotação, desligada por padrão. Quarta tela (`gi
 
 ## Contadores do Claude
 
-`config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, nas telas 1 (anéis) e 2 (linha); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 os 7 dias são barras deitadas (um dia por linha, hoje primeiro em âmbar e depois os anteriores, valor = % do limite semanal gasto no dia, sem título) numa coluna fixa (170 px; 150 com 3 anéis; 140 com GIF); os anéis dividem o resto. Com 1 ou 2 anéis eles crescem (108 px, 96 com GIF); com 3 ficam em 78 px; coluna abaixo de 170 px vira formato compacto. O card nunca fica vazio.
+`config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, na tela 1 (a linha do Claude saiu da tela 2); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 os 7 dias são barras deitadas (um dia por linha, hoje primeiro em âmbar e depois os anteriores, valor = % do limite semanal gasto no dia, sem título) numa coluna fixa (170 px; 150 com 3 anéis; 140 com GIF); os anéis dividem o resto. Com 1 ou 2 anéis eles crescem (108 px, 96 com GIF); com 3 ficam em 78 px; coluna abaixo de 170 px vira formato compacto. O card nunca fica vazio.
 
 ## Cotações ao lado do relógio (tela 1)
 

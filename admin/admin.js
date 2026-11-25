@@ -2,7 +2,7 @@ import { CATALOG as QUOTES, MAX_QUOTES as MAX_Q } from '/widgets/quotes/catalog.
 // /admin: telas e configurações. Funciona no navegador do PC e no próprio celular.
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol e Claude em linha'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'], gif: ['GIF', 'Só a imagem animada, em tela cheia. Envie abaixo.'] };
+const SCREEN_NAMES = { tela1: ['Principal', 'Relógio, tempo e uso do Claude'], tela2: ['Tempo em detalhe', 'Próximas 24 h, sol, chuva, umidade e UV'], tela3: ['Saúde do sistema', 'S20, curva da sessão e latência'], gif: ['GIF', 'Só a imagem animada, em tela cheia. Envie abaixo.'] };
 const WIDGET_NAMES = { weather: 'Tempo', claude: 'Uso do Claude', system: 'Sistema do S20', quotes: 'Cotações' };
 let S = null; // { config, secrets, status, server, demo }
 let dirty = false;
@@ -298,7 +298,7 @@ ${field('rotation.intervalSec', 'Trocar de tela a cada (s)', 'number', 'min="20"
 ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 </div>
 <h2 style="margin-top:16px">Contadores do Claude</h2>
-<p class="muted">Quais aparecem e em que ordem, na tela principal (anéis) e na tela 2 (linha). Cada anel que sai dá o espaço para a estatística.</p>
+<p class="muted">Quais aparecem e em que ordem, na tela principal. Cada anel que sai dá o espaço para a estatística.</p>
 <div class="screens">${counterList()}</div>
 <div class="grid" style="margin-top:8px">
 ${field('claudeView.showStats', 'Mostrar últimos 7 dias (tela principal)', 'checkbox')}
