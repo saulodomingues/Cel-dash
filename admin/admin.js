@@ -168,21 +168,16 @@ function gifSection() {
   const items = S.config.gif.items;
   const spots = gifSpots();
   const full = S.config.screens.find((x) => x.id === 'gif');
-  const badges = (file) => [
-    spots.clock === file || spots.clock === '*' ? 'relógio' : '',
-    spots.claude === file || spots.claude === '*' ? 'Claude' : '',
-    full?.enabled ? 'tela cheia' : '',
-  ].filter(Boolean);
   return `
 <section class="card"><h2>GIFs</h2>
-<p class="muted">Sua coleção de GIFs, salva no celular. Escolha onde cada um aparece. Aceita GIF, PNG, JPG ou WEBP, até 20 MB cada.</p>
+<p class="muted">Sua coleção de GIFs, salva no celular. Escolha onde aparecem em "Onde mostrar", abaixo. Aceita GIF, PNG, JPG ou WEBP, até 20 MB cada.</p>
 <div class="row"><label>Adicionar GIFs (pode escolher vários de uma vez)<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label></div>
 <div id="uploads">${uploadsHtml()}</div>
 <div class="gallery">${items.map((it) => `
 <figure class="gif">
 <div class="gifthumb"><img src="/media/${esc(it.file)}" alt="${esc(it.name)}"></div>
-<figcaption><span class="gifname">${esc(it.name)}</span>${badges(it.file).map((b) => `<span class="badge">${b}</span>`).join('')}</figcaption>
-<div class="row gifbtns"><button data-gifuse="clock:${esc(it.file)}">Usar no relógio</button><button data-gifuse="claude:${esc(it.file)}">Usar no Claude</button><button data-delmedia="${esc(it.file)}" aria-label="Apagar ${esc(it.name)}">Apagar</button></div>
+<figcaption><span class="gifname">${esc(it.name)}</span></figcaption>
+<button data-delmedia="${esc(it.file)}" aria-label="Apagar ${esc(it.name)}">Apagar</button>
 </figure>`).join('') || '<p class="muted">Nenhum GIF ainda. Adicione acima.</p>'}</div>
 <h2 style="margin-top:16px">Onde mostrar</h2>
 <div class="grid">
@@ -382,11 +377,6 @@ function wire() {
   document.getElementById('gifClock').addEventListener('change', (e) => { setClockGif(e.target.value); markDirty(); });
   document.getElementById('gifClaude').addEventListener('change', (e) => { S.config.claudeView.gif = e.target.value; markDirty(); });
   document.getElementById('gifFull').addEventListener('change', (e) => { S.config.screens.find((x) => x.id === 'gif').enabled = e.target.checked; markDirty(); });
-  app.querySelectorAll('[data-gifuse]').forEach((el) => el.addEventListener('click', () => {
-    const [where, file] = el.dataset.gifuse.split(':');
-    if (where === 'clock') setClockGif(file); else S.config.claudeView.gif = file;
-    markDirty(); toast(`Definido ${where === 'clock' ? 'ao lado do relógio' : 'ao lado do Claude'}. Falta salvar.`);
-  }));
   app.querySelectorAll('[data-delmedia]').forEach((el) => el.addEventListener('click', guard(async () => {
     if (!confirm('Apagar este GIF do celular?')) return;
     const r = await call('DELETE', `/api/admin/media/${el.dataset.delmedia}`);
