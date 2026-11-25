@@ -58,3 +58,15 @@ code { background: var(--field); border-radius: 4px; padding: 1px 5px; font-size
 .gifbtns button { flex: 1 1 auto; padding: 6px 8px; min-height: 34px; font-size: 12px; }
 input[type=file] { color: var(--muted); font-size: 12px; }
 input[type=file]::file-selector-button { background: var(--amber); color: #000; border: 0; border-radius: 8px; padding: 9px 14px; margin-right: 10px; font: 600 14px Inter, system-ui, sans-serif; cursor: pointer; }
+
+.uploads { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.up { background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.upline { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+.upname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.upstate { color: var(--muted); white-space: nowrap; }
+.up.ok .upstate { color: var(--green); }
+.up.erro .upstate { color: var(--amber); }
+.upbar { height: 4px; border-radius: 2px; background: var(--line); margin-top: 6px; overflow: hidden; }
+.upbar > div { height: 100%; background: var(--amber); transition: width 0.2s; }
+.up.ok .upbar > div { background: var(--green); }
+.up.erro .upbar > div { background: var(--amber); opacity: 0.4; }

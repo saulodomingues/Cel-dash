@@ -93,6 +93,61 @@ function screensList() {
 }
 
 // ---------- GIFs ----------
+// Envio com progresso, um arquivo por vez. Um arquivo com erro não impede os outros;
+// o resultado de cada um fica na tela até o próximo envio.
+const MEDIA_MAX = 20 * 1024 * 1024;
+let uploads = []; // [{ name, size, pct, state: 'fila'|'enviando'|'ok'|'erro', error }]
+
+function sendFile(f, onProgress) {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open('POST', '/api/admin/media');
+    x.setRequestHeader('Content-Type', 'application/octet-stream');
+    x.setRequestHeader('X-File-Name', encodeURIComponent(f.name));
+    x.upload.onprogress = (ev) => { if (ev.lengthComputable) onProgress(ev.loaded / ev.total); };
+    x.onload = () => {
+      let j = {}; try { j = JSON.parse(x.responseText); } catch { /* resposta vazia */ }
+      if (x.status === 401) { boot(); return reject(new Error('Sessão expirada. Entre de novo.')); }
+      if (x.status >= 200 && x.status < 300) resolve(j); else reject(new Error(j.error || `Erro ${x.status}`));
+    };
+    x.onerror = () => reject(new Error('A conexão com o celular caiu durante o envio.'));
+    x.ontimeout = () => reject(new Error('O envio demorou demais.'));
+    x.timeout = 10 * 60_000;
+    x.send(f);
+  });
+}
+
+function uploadsHtml() {
+  if (!uploads.length) return '';
+  const kb = (n) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+  return `<div class="uploads">${uploads.map((u) => `
+<div class="up ${u.state}"><div class="upline"><span class="upname">${esc(u.name)}</span><span class="upstate">${
+  u.state === 'fila' ? 'na fila' : u.state === 'enviando' ? `${Math.round(u.pct * 100)}%` : u.state === 'ok' ? 'adicionado ✓' : 'falhou'} · ${kb(u.size)}</span></div>
+<div class="upbar"><div style="width:${u.state === 'ok' ? 100 : Math.round(u.pct * 100)}%"></div></div>
+${u.error ? `<div class="err">${esc(u.error)}</div>` : ''}</div>`).join('')}</div>`;
+}
+function paintUploads() { const el = document.getElementById('uploads'); if (el) el.innerHTML = uploadsHtml(); }
+
+async function uploadGifs(files) {
+  if (!files.length) return;
+  uploads = files.map((f) => ({ name: f.name, size: f.size, pct: 0, state: 'fila', error: f.size > MEDIA_MAX ? 'Maior que 20 MB.' : null }));
+  uploads.forEach((u) => { if (u.error) u.state = 'erro'; });
+  paintUploads();
+  const input = document.getElementById('gifFile'); input.disabled = true;
+  for (let i = 0; i < files.length; i++) {
+    const u = uploads[i];
+    if (u.state === 'erro') continue;
+    u.state = 'enviando'; paintUploads();
+    try {
+      const j = await sendFile(files[i], (p) => { u.pct = p; paintUploads(); });
+      S.config.gif = j.config.gif; u.state = 'ok';
+    } catch (err) { u.state = 'erro'; u.error = err.message; }
+    paintUploads();
+  }
+  const ok = uploads.filter((u) => u.state === 'ok').length, bad = uploads.length - ok;
+  render(); // galeria com os novos
+  toast(bad ? `${ok} adicionado(s), ${bad} com erro. Veja a lista.` : ok > 1 ? `${ok} GIFs adicionados.` : 'GIF adicionado.');
+}
 // Onde cada GIF aparece: valor da escolha = '' (não mostrar), '*' (alternar entre todos) ou o arquivo.
 function gifSpots() {
   const c = S.config;
@@ -122,6 +177,7 @@ function gifSection() {
 <section class="card"><h2>GIFs</h2>
 <p class="muted">Sua coleção de GIFs, salva no celular. Escolha onde cada um aparece. Aceita GIF, PNG, JPG ou WEBP, até 20 MB cada.</p>
 <div class="row"><label>Adicionar GIFs (pode escolher vários de uma vez)<input type="file" id="gifFile" accept="image/gif,image/png,image/jpeg,image/webp" multiple></label></div>
+<div id="uploads">${uploadsHtml()}</div>
 <div class="gallery">${items.map((it) => `
 <figure class="gif">
 <div class="gifthumb"><img src="/media/${esc(it.file)}" alt="${esc(it.name)}"></div>
@@ -317,18 +373,7 @@ function wire() {
     if (!S.config.screens.some((s) => s.enabled)) { S.config.screens[Number(el.dataset.screen)].enabled = true; toast('Pelo menos uma tela precisa ficar ativa.'); }
     dirty = true; render();
   }));
-  document.getElementById('gifFile').addEventListener('change', guard(async (e) => {
-    const files = [...e.target.files];
-    for (const f of files) {
-      toast(`Enviando ${f.name}…`);
-      const r = await fetch('/api/admin/media', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(f.name) }, body: f });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error || `Erro ${r.status}`);
-      S.config.gif = j.config.gif;
-    }
-    e.target.value = '';
-    render(); toast(files.length > 1 ? `${files.length} GIFs adicionados.` : 'GIF adicionado.');
-  }));
+  document.getElementById('gifFile').addEventListener('change', (e) => uploadGifs([...e.target.files]));
   const setClockGif = (v) => {
     if (v) { S.config.tela1.clockExtra = 'gif'; S.config.tela1.clockGif = v; }
     else if (S.config.tela1.clockExtra === 'gif') S.config.tela1.clockExtra = 'calendar';

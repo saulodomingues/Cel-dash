@@ -92,14 +92,13 @@ function imageType(buf) {
   return null;
 }
 
+// Lê o corpo inteiro. Passou do limite: descarta o resto, mas deixa o envio terminar,
+// para o navegador receber a resposta de erro em vez de uma conexão cortada.
 function readRaw(req, max) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
-    req.on('data', (c) => {
-      size += c.length;
-      if (size > max) { reject(new Error(`Arquivo grande demais (máximo ${max / 1024 / 1024} MB).`)); req.destroy(); } else chunks.push(c);
-    });
-    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('data', (c) => { size += c.length; if (size <= max) chunks.push(c); });
+    req.on('end', () => (size > max ? reject(new Error(`Arquivo grande demais (máximo ${max / 1024 / 1024} MB).`)) : resolve(Buffer.concat(chunks))));
     req.on('error', reject);
   });
 }
@@ -226,6 +225,7 @@ async function api(req, res, url) {
     if (!type) return send(res, 400, { error: 'Envie um GIF, PNG, JPG ou WEBP.' });
     const file = `${crypto.randomBytes(8).toString('hex')}.${type}`;
     fs.writeFileSync(path.join(MEDIA_DIR, file), buf);
+    console.log(`[gif] recebido ${file} (${Math.round(buf.length / 1024)} KB)`);
     const name = decodeURIComponent(String(req.headers['x-file-name'] || file)).slice(0, 80);
     const c = getConfig();
     const after = setConfig({ ...c, gif: { ...c.gif, items: [...c.gif.items, { file, name }] } });
