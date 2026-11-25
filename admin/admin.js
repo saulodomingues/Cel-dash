@@ -193,6 +193,10 @@ ${field('rotation.tapNext', 'Toque na tela pula para a próxima', 'checkbox')}
 <div class="grid" style="margin-top:8px">
 ${field('claudeView.showStats', 'Mostrar últimos 7 dias (tela principal)', 'checkbox')}
 ${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'checkbox')}
+<label>À direita do card do Claude<select data-path="claudeView.gif">
+<option value="" ${!S.config.claudeView.gif ? 'selected' : ''}>Nada</option>
+${S.config.gif.items.length ? `<option value="*" ${S.config.claudeView.gif === '*' ? 'selected' : ''}>GIF, alternando entre todos</option>${S.config.gif.items.map((i) => `<option value="${esc(i.file)}" ${S.config.claudeView.gif === i.file ? 'selected' : ''}>GIF: ${esc(i.name)}</option>`).join('')}` : '<option disabled>GIF (envie um em GIFs, acima)</option>'}
+</select></label>
 </div>
 <div class="grid" style="margin-top:12px">
 <label>Ao lado do relógio (tela principal)<select data-path="tela1.clockExtra">

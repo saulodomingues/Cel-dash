@@ -6,13 +6,27 @@ const AMBER = '#F5A524', LILAC = '#C58AF9', BLUE = '#8AB4F8';
 const C = 226.2; // circunferência do anel (r = 36)
 const clampPct = (v) => Math.max(0, Math.min(100, v));
 
-function ring(win, base, title, sub, now, windowMs, center = false) {
+// compact: anel menor com o texto embaixo, para quando a coluna fica estreita (ex.: com GIF no card).
+function ring(win, base, title, sub, now, windowMs, center = false, compact = false) {
   const has = win && typeof win.pct === 'number';
   const mood = usageMood(win, base, windowMs, now);
   const color = mood.color;
   const note = win?.unlimited ? 'sem limite no plano' : !has ? 'sem dados'
     : mood.note ? `<span style="color: ${color}">${esc(mood.note)}</span>` : resetText(win.resetsAt, now);
   const dash = has ? (clampPct(win.pct) / 100) * C : 0;
+  const arc = (size) => `<svg role="img" aria-label="${esc(title)} ${esc(sub)}: ${has ? pct(win.pct) : 'sem dados'}" width="${size}" height="${size}" viewBox="0 0 84 84" style="flex: none">
+<circle cx="42" cy="42" r="36" fill="none" stroke="#1C1E22" stroke-width="7"/>
+${dash > 0.5 ? `<circle cx="42" cy="42" r="36" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C}" transform="rotate(-90 42 42)"/>` : ''}
+<text x="42" y="49" text-anchor="middle" fill="${has ? '#E8EAED' : '#9AA0A6'}" font-family="'Space Grotesk', sans-serif" font-size="21" font-weight="500">${has ? pct(win.pct) : '—'}</text>
+</svg>`;
+  if (compact) {
+    return `
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; text-align: center">
+${arc(66)}
+<div style="font-size: 12px; color: #E8EAED; font-weight: 500; white-space: nowrap">${esc(title === 'Semana' ? sub === 'todos os modelos' ? 'Semana' : sub : title)}</div>
+<div style="font-size: 10.5px; color: #9AA0A6; white-space: nowrap">${note}</div>
+</div>`;
+  }
   return `
 <div style="display: flex; align-items: center; justify-content: ${center ? 'center' : 'flex-start'}; gap: 8px; min-width: 0">
 <svg role="img" aria-label="${esc(title)} ${esc(sub)}: ${has ? pct(win.pct) : 'sem dados'}" width="78" height="78" viewBox="0 0 84 84" style="flex: none">
@@ -62,18 +76,27 @@ export function pickCounters(d, view = DEFAULT_VIEW) {
 }
 
 // Tela 1: card inteiro.
-export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW) {
+// `right`: HTML opcional na ponta direita do card (ex.: GIF), numa coluna de largura fixa.
+export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '') {
   const head = `<div style="display: flex; justify-content: space-between; ${LABEL}"><span>Claude${planLabel ? ` · ${esc(planLabel)}` : ''}</span><span>${ago(w, now)}</span></div>`;
   const d = w?.data;
-  if (!d) return head + noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'sem dados');
+  if (!d) {
+    const msg = noData(w?.error ? 'sem dados · veja o motivo no /admin' : 'sem dados');
+    return head + (right ? `<div style="flex: 1; min-height: 0; display: flex; gap: 14px">${msg}${right}</div>` : msg);
+  }
   const rings = pickCounters(d, view);
   const stats = view.showStats !== false || rings.length === 0; // o card nunca fica vazio
   // 4 espaços: cada anel ocupa 1; a estatística fica com 0,8 mais o espaço de cada anel que saiu
-  const cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : [])].join(' ');
+  const cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`minmax(0, ${3 - rings.length + 0.8}fr)`] : []), ...(right ? ['124px'] : [])].join(' ');
+  // largura de cada anel: card de ~722 px úteis, menos GIF e espaçamentos; abaixo de ~170 px o texto ao lado não cabe (o mock usa ~179)
+  const items = rings.length + (stats ? 1 : 0) + (right ? 1 : 0);
+  const fr = rings.length + (stats ? 3 - rings.length + 0.8 : 0);
+  const compact = rings.length > 0 && (722 - (right ? 124 : 0) - 14 * (items - 1)) / fr < 170;
   return `${head}
 <div style="display: grid; grid-template-columns: ${cols}; gap: 14px; flex: 1; min-height: 0">
-${rings.map((c) => ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats)).join('\n')}
+${rings.map((c) => ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats, compact)).join('\n')}
 ${stats ? bars7(d.days) : ''}
+${right}
 </div>`;
 }
 

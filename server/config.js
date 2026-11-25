@@ -27,6 +27,7 @@ export const DEFAULTS = {
     counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }],
     showStats: true,
     hideUnlimited: true,
+    gif: '', // GIF à direita do card do Claude: '' = nenhum, '*' = alterna entre todos, ou um arquivo
   },
   rotation: { intervalSec: 180, tapNext: true },
   pixelShift: { intervalSec: 60, maxPx: 4 },
@@ -87,6 +88,7 @@ function sanitize(c) {
   for (const id of ids) if (!got.some((g) => g.id === id)) got.push({ id, enabled: true });
   if (!got.some((g) => g.enabled) && !c.claudeView.showStats) c.claudeView.showStats = true; // card nunca vazio
   c.claudeView.counters = got;
+  if (c.claudeView.gif !== '*' && !c.gif.items.some((i) => i.file === c.claudeView.gif)) c.claudeView.gif = '';
   c.gif.fit = c.gif.fit === 'cover' ? 'cover' : 'contain';
   c.gif.items = c.gif.items.filter((i) => i && /^[a-f0-9]{16}\.(gif|png|jpg|webp)$/.test(i.file)).map((i) => ({ file: i.file, name: String(i.name || i.file).slice(0, 80) }));
   c.tela1.clockExtra = ['calendar', 'gif', 'none'].includes(c.tela1.clockExtra) ? c.tela1.clockExtra : 'calendar';
