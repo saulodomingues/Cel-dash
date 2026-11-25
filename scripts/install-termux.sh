@@ -4,7 +4,9 @@ set -e
 cd "$(dirname "$0")/.."
 DIR="$(pwd)"
 
+# atualiza tudo antes: instalar o Node sobre bibliotecas antigas dá "CANNOT LINK EXECUTABLE"
 pkg update -y
+yes | pkg upgrade -y -o Dpkg::Options::=--force-confnew
 pkg install -y nodejs-lts termux-api git
 
 # sobe sozinho depois de reiniciar o aparelho (precisa do app Termux:Boot aberto uma vez)

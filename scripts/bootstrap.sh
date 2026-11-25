@@ -6,7 +6,9 @@ set -e
 REPO=https://github.com/saulodomingues/Cel-dash.git
 DIR="$HOME/Cel-dash"
 
+# atualiza tudo antes: instalar o Node sobre bibliotecas antigas dá "CANNOT LINK EXECUTABLE"
 pkg update -y
+yes | pkg upgrade -y -o Dpkg::Options::=--force-confnew
 pkg install -y git
 if [ -d "$DIR/.git" ]; then git -C "$DIR" pull --ff-only; else git clone "$REPO" "$DIR"; fi
 sh "$DIR/scripts/install-termux.sh"
