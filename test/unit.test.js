@@ -18,7 +18,7 @@ test('claude: login gera o endereço de autorização com PKCE e recusa código 
   // vetor do RFC 7636, apêndice B
   assert.equal(claudeAuth.challengeFor('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
   const u = new URL(claudeAuth.startLogin());
-  assert.equal(u.origin + u.pathname, 'https://claude.ai/oauth/authorize');
+  assert.equal(u.origin + u.pathname, 'https://claude.com/cai/oauth/authorize');
   assert.equal(u.searchParams.get('scope'), 'user:profile');
   assert.equal(u.searchParams.get('code_challenge_method'), 'S256');
   assert.ok(u.searchParams.get('state').length >= 32);

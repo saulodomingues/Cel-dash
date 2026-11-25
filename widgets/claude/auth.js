@@ -7,11 +7,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const TOKEN_URL = 'https://console.anthropic.com/v1/oauth/token';
-const CLIENT_ID = '9d1e250a-e61b-44d9-88ed-5944d1962f5e'; // cliente OAuth do Claude Code, o emissor do token
+const TOKEN_URL = 'https://platform.claude.com/v1/oauth/token';
+const CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e'; // cliente OAuth do Claude Code, o emissor do token
 
-const AUTHORIZE_URL = 'https://claude.ai/oauth/authorize';
-const REDIRECT_URI = 'https://console.anthropic.com/oauth/code/callback';
+const AUTHORIZE_URL = 'https://claude.com/cai/oauth/authorize';
+const REDIRECT_URI = 'https://platform.claude.com/oauth/code/callback';
 const SCOPE = 'user:profile'; // só o necessário para ler o uso; não dá acesso a conversar com os modelos
 
 // ---------- login pelo /admin (mesmo fluxo do `claude login`: abre o claude.ai, devolve um código) ----------
