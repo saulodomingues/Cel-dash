@@ -63,12 +63,12 @@ const COUNTERS = {
   model: (d) => ({ win: d?.model, base: LILAC, title: 'Semana', sub: d?.model?.label || 'Fable', line: d?.model?.label || 'Fable', windowMs: WEEK_MS }),
   week: (d) => ({ win: d?.week, base: BLUE, title: 'Semana', sub: 'Todos modelos', line: 'Semana', windowMs: WEEK_MS }),
 };
-const DEFAULT_VIEW = { counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }], showStats: true, hideUnlimited: true };
+const DEFAULT_VIEW = { counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }, { id: 'stats', enabled: true }], showStats: true, hideUnlimited: true };
 
 export function pickCounters(d, view = DEFAULT_VIEW) {
   return (view.counters || DEFAULT_VIEW.counters)
     .filter((c) => c.enabled && COUNTERS[c.id])
-    .map((c) => COUNTERS[c.id](d))
+    .map((c) => ({ id: c.id, ...COUNTERS[c.id](d) }))
     .filter((c) => !(view.hideUnlimited && c.win?.unlimited));
 }
 
@@ -82,7 +82,9 @@ export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '', h
     return head + (right ? `<div style="flex: 1; min-height: 0; display: flex; gap: 14px">${msg}${right}</div>` : msg);
   }
   const rings = pickCounters(d, view);
-  const stats = view.showStats !== false || rings.length === 0; // o card nunca fica vazio
+  const list = view.counters || DEFAULT_VIEW.counters;
+  const statsItem = list.find((c) => c.id === 'stats');
+  const stats = (statsItem ? statsItem.enabled : view.showStats !== false) || rings.length === 0; // o card nunca fica vazio
   // A estatística (barras deitadas) tem largura fixa e o GIF também; os anéis dividem o resto.
   // Com 1 ou 2 anéis eles crescem; se a coluna de cada anel ficar estreita, viram compactos (texto embaixo).
   const W = 722, GAP = 14, GIF = right ? 124 : 0;
@@ -91,12 +93,15 @@ export function claudeCard(w, now, planLabel, view = DEFAULT_VIEW, right = '', h
   const colW = n ? (W - STATS - GIF - GAP * (n + (stats ? 1 : 0) + (right ? 1 : 0) - 1)) / n : 0;
   const compact = n > 0 && colW < 170;
   const size = n <= 2 ? (right ? 96 : 108) : 78;
-  const cols = [...rings.map(() => 'minmax(0, 1fr)'), ...(stats ? [`${STATS}px`] : []), ...(right ? [`${GIF}px`] : [])].join(' ');
+  // ordem da lista do /admin: o gráfico entra na posição dele entre os anéis
+  const statsAt = stats ? (statsItem ? list.filter((c) => c.enabled && (c.id === 'stats' || rings.some((r) => r.id === c.id))).findIndex((c) => c.id === 'stats') : rings.length) : -1;
+  const at = statsAt < 0 ? rings.length : Math.min(statsAt, rings.length);
+  const cells = rings.map((c) => ({ col: 'minmax(0, 1fr)', html: ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats || n === 1, compact, size) }));
+  if (stats) cells.splice(at, 0, { col: `${STATS}px`, html: barsH(d.days) });
+  if (right) cells.push({ col: `${GIF}px`, html: right });
   return `${head}
-<div style="display: grid; grid-template-columns: ${cols}; gap: 14px; flex: 1; min-height: 0">
-${rings.map((c) => ring(c.win, c.base, c.title, c.sub, now, c.windowMs, !stats || n === 1, compact, size)).join('\n')}
-${stats ? barsH(d.days) : ''}
-${right}
+<div style="display: grid; grid-template-columns: ${cells.map((c) => c.col).join(' ')}; gap: 14px; flex: 1; min-height: 0">
+${cells.map((c) => c.html).join('\n')}
 </div>`;
 }
 

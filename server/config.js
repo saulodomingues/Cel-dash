@@ -29,7 +29,7 @@ export const DEFAULTS = {
   tela1: { clockExtra: 'calendar', clockGif: '*' }, // clockExtra: 'calendar' | 'quotes' | 'gif' | 'none'; clockGif: arquivo em data/media ou '*' = alterna entre todos
   // contadores do Claude nas telas 1 e 2: quais e em que ordem; estatística de 7 dias na tela 1
   claudeView: {
-    counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }],
+    counters: [{ id: 'session', enabled: true }, { id: 'model', enabled: true }, { id: 'week', enabled: true }, { id: 'stats', enabled: true }],
     showStats: true,
     hideUnlimited: true,
     gif: '', // GIF à direita do card do Claude: '' = nenhum, '*' = alterna entre todos, ou um arquivo
@@ -104,11 +104,14 @@ function sanitize(c) {
   }
   for (const id of known) if (!seen.has(id)) screens.push({ ...DEFAULTS.screens.find((d) => d.id === id) });
   c.screens = screens;
-  const ids = ['session', 'model', 'week'], got = [];
+  // 'stats' (gráfico de uso dia a dia) é um item da lista, para poder mudar de posição;
+  // configs antigas, sem ele, recebem no fim, ligado conforme o antigo showStats
+  const ids = ['session', 'model', 'week', 'stats'], got = [];
   for (const x of c.claudeView.counters) if (x && ids.includes(x.id) && !got.some((g) => g.id === x.id)) got.push({ id: x.id, enabled: x.enabled !== false });
-  for (const id of ids) if (!got.some((g) => g.id === id)) got.push({ id, enabled: true });
-  if (!got.some((g) => g.enabled) && !c.claudeView.showStats) c.claudeView.showStats = true; // card nunca vazio
+  for (const id of ids) if (!got.some((g) => g.id === id)) got.push({ id, enabled: id === 'stats' ? c.claudeView.showStats !== false : true });
+  if (!got.some((g) => g.enabled)) got.find((g) => g.id === 'stats').enabled = true; // card nunca vazio
   c.claudeView.counters = got;
+  c.claudeView.showStats = got.find((g) => g.id === 'stats').enabled; // mantido por compatibilidade
   if (c.claudeView.gif !== '*' && !c.gif.items.some((i) => i.file === c.claudeView.gif)) c.claudeView.gif = '';
   c.quotes.items = [...new Set(c.quotes.items.filter((id) => CATALOG.some((q) => q.id === id)))].slice(0, MAX_QUOTES);
   c.quotes.intervalMin = clamp(Math.round(c.quotes.intervalMin), 2, 120);

@@ -113,7 +113,7 @@ Tela cheia: quinta opção da rotação, desligada por padrão. Quarta tela (`gi
 
 ## Contadores do Claude
 
-`config.claudeView`: quais dos três contadores (sessão, semana do modelo, semana geral) aparecem e em que ordem, na tela 1 (a linha do Claude saiu da tela 2); `showStats` liga os 7 dias na tela 1; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 os 7 dias são barras deitadas (um dia por linha, hoje primeiro em âmbar e depois os anteriores, valor = % do limite semanal gasto no dia, sem título) numa coluna fixa (170 px; 150 com 3 anéis; 140 com GIF); os anéis dividem o resto. Com 1 ou 2 anéis eles crescem (108 px, 96 com GIF); com 3 ficam em 78 px; coluna abaixo de 170 px vira formato compacto. O card nunca fica vazio.
+`config.claudeView`: quais itens aparecem e em que ordem, da esquerda para a direita, na tela 1 (a linha do Claude saiu da tela 2): os três contadores (sessão, semana do modelo, semana geral) e, desde 26/11/2026, o gráfico dos 7 dias como quarto item da mesma lista (`id: 'stats'`), que pode ir para qualquer posição; `showStats` só acompanha esse item, por compatibilidade; `hideUnlimited` (padrão ligado) tira o contador que o plano não tem (sessão no Ultra). Na tela 1 os 7 dias são barras deitadas (um dia por linha, hoje primeiro em âmbar e depois os anteriores, valor = % do limite semanal gasto no dia, sem título) numa coluna fixa (170 px; 150 com 3 anéis; 140 com GIF); os anéis dividem o resto. Com 1 ou 2 anéis eles crescem (108 px, 96 com GIF); com 3 ficam em 78 px; coluna abaixo de 170 px vira formato compacto. O card nunca fica vazio.
 
 ## Cotações ao lado do relógio (tela 1)
 

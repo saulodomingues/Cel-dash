@@ -161,6 +161,11 @@ test('config: valores fora da faixa são corrigidos e o painel não vê caminhos
   assert.deepEqual(c2.screens.slice(0, 3), [{ id: 'tela1', enabled: true, seconds: 10 }, { id: 'tela2', enabled: true, seconds: null }, { id: 'news', enabled: true, seconds: 240, auto: false }]);
   assert.equal(c.night.start, '22:00');
   assert.equal(publicConfig().claude.credentialsFile, undefined);
+  // gráfico dia a dia vira item da lista: config antiga recebe no fim, ligado conforme showStats
+  const v = setConfig({ claudeView: { counters: [{ id: 'week', enabled: true }, { id: 'model', enabled: false }], showStats: false } }).claudeView;
+  assert.deepEqual(v.counters.map((x) => `${x.id}:${x.enabled}`), ['week:true', 'model:false', 'session:true', 'stats:false']);
+  const v2 = setConfig({ claudeView: { counters: [{ id: 'stats', enabled: true }, { id: 'week', enabled: true }] } }).claudeView;
+  assert.equal(v2.counters[0].id, 'stats'); assert.equal(v2.showStats, true);
 });
 
 test('burn-in: pixel shift fica dentro do limite e horário noturno cruza a meia-noite', () => {

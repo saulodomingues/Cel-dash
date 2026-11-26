@@ -238,7 +238,7 @@ ${S.status.quotes?.data?.errors?.length ? `<p class="err" style="margin-top:8px"
 ${field('quotes.intervalMin', 'Atualizar cotações a cada (min)', 'number', 'min="2" max="120"')}`;
 }
 
-const COUNTER_NAMES = { session: ['Sessão de 5 h', 'some sozinho em plano sem esse limite'], model: ['Semana do modelo', 'Fable, ou o escolhido em Claude'], week: ['Semana, todos modelos', ''] };
+const COUNTER_NAMES = { session: ['Sessão de 5 h', 'some sozinho em plano sem esse limite'], model: ['Semana do modelo', 'Fable, ou o escolhido em Claude'], week: ['Semana, todos modelos', ''], stats: ['Gráfico de uso dia a dia', 'últimos 7 dias, hoje primeiro'] };
 function counterList() {
   const list = S.config.claudeView.counters;
   return list.map((c, i) => {
@@ -346,10 +346,9 @@ ${S.config.tela1.clockExtra === 'quotes' ? quotesPicker() : ''}
 </div></section>
 
 <section class="card"><h2>Claude na tela principal</h2>
-<p class="muted">Quais aparecem e em que ordem, na tela principal. Cada anel que sai dá o espaço para a estatística.</p>
+<p class="muted">Quais aparecem e em que ordem, da esquerda para a direita, na tela principal. Cada anel que sai dá o espaço para o gráfico.</p>
 <div class="screens">${counterList()}</div>
 <div class="grid" style="margin-top:8px">
-${field('claudeView.showStats', 'Mostrar o gráfico de uso dia a dia (últimos 7 dias)', 'checkbox')}
 ${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'checkbox')}
 </div>
 </section>
