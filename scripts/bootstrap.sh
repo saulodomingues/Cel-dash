@@ -1,9 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/sh
-# Instala (ou atualiza) e inicia o painel. Comando para colar no Termux (repositório privado):
-#   pkg install -y git && git config --global credential.helper store && git clone https://github.com/saulodomingues/Cel-dash.git && sh Cel-dash/scripts/bootstrap.sh
-# O git pede usuário e token uma vez e guarda em ~/.git-credentials para as atualizações automáticas.
+# Instala (ou atualiza) e inicia o painel. Comando para colar no Termux:
+#   pkg install -y git && git clone https://github.com/USUARIO/Cel-dash.git && sh Cel-dash/scripts/bootstrap.sh
+# Com a pasta já clonada, o script só atualiza (git pull) e reinicia; REPO só é usado se ela não existir.
 set -e
-REPO=https://github.com/saulodomingues/Cel-dash.git
+REPO="${REPO:-https://github.com/saulodomingues/Cel-dash.git}"
 DIR="$HOME/Cel-dash"
 
 # atualiza tudo antes: instalar o Node sobre bibliotecas antigas dá "CANNOT LINK EXECUTABLE"
@@ -19,5 +19,5 @@ pkill -f "node server/index.js" 2>/dev/null || true
 nohup sh "$HOME/.termux/boot/monitor-mesa.sh" >/dev/null 2>&1 &
 sleep 3
 echo
-echo "Painel no ar: abra http://localhost:8080/ no Fully Kiosk."
+echo "Painel no ar: abra http://localhost:8080/ no Chrome do celular."
 echo "Configurações: http://localhost:8080/admin (ou pelo PC, no IP do celular)."

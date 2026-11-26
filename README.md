@@ -1,5 +1,7 @@
 # Monitor de mesa no Galaxy S20
 
+> Guia completo de instalação e de alteração (inclusive para o Claude Code): **[GUIA-INSTALACAO.md](GUIA-INSTALACAO.md)**.
+
 Painel de mesa que roda inteiro no celular: o S20 coleta os dados, serve as páginas e mostra a tela. Sem PC ligado, sem nuvem, sem Raspberry Pi.
 
 - **`/`** é o painel, aberto em tela cheia no próprio S20 pelo Fully Kiosk Browser.
