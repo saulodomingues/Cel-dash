@@ -349,7 +349,7 @@ ${S.config.tela1.clockExtra === 'quotes' ? quotesPicker() : ''}
 <p class="muted">Quais aparecem e em que ordem, na tela principal. Cada anel que sai dá o espaço para a estatística.</p>
 <div class="screens">${counterList()}</div>
 <div class="grid" style="margin-top:8px">
-${field('claudeView.showStats', 'Mostrar últimos 7 dias (tela principal)', 'checkbox')}
+${field('claudeView.showStats', 'Mostrar o gráfico de uso dia a dia (últimos 7 dias)', 'checkbox')}
 ${field('claudeView.hideUnlimited', 'Ocultar contador sem limite no plano', 'checkbox')}
 </div>
 </section>
